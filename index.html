@@ -1,26 +1,386 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 80vh;
-      background-color: #f5f5f7;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Dhia naouali</title>
+<script src="https://unpkg.com/@rankdim/conway@0.5.0/dist/conway.umd.cjs"></script>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+.header-section {
+    background-color: #d4e8c5;
+    padding: 30px 40px;
+    display: flex;
+    gap: 0;
+}
+
+.side-div {
+    width: 150px;
+    background-color: transparent;
+    position: relative;
+}
+
+.side-div canvas {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.middle-div {
+    flex: 1;
+}
+
+.header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 60px;
+}
+
+.profile-image {
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid white;
+    flex-shrink: 0;
+}
+
+.header-content {
+    flex: 1;
+}
+
+.name {
+    font-size: 3rem;
+    font-weight: 400;
+    margin-bottom: 15px;
+    color: #2c2c2c;
+}
+
+.links {
+    margin-bottom: 25px;
+    font-size: 0.9rem;
+}
+
+.links a {
+    color: #0e8d6c;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.links a:hover {
+    text-decoration: underline;
+}
+
+.separator {
+    color: #2c2c2c;
+    margin: 0 5px;
+}
+
+.tagline {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #2c2c2c;
+}
+
+.bio {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #2c2c2c;
+}
+
+.bio strong {
+    font-weight: 600;
+}
+
+
+.blog-section {
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; 
+}
+
+.blog-side {
+    width: 24%;
+    min-height: 100%;
+    height: auto;
+    display: flex;
+}
+
+.blog-side canvas {
+    width: 92%;
+    /* margin-bottom: 4%; */
+    margin-left: 4%;
+    margin-right: 4%;
+    height: 100%;
+    min-height: 100px;
+}
+
+.blog-middle {
+    flex: 1;
+    max-width: 52%;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 400;
+    margin-bottom: 30px;
+    color: #2c2c2c;
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
-    em {
-      font-family: verdana;
-      margin-top: 10px;
-      font-size: 16px;
-      color: #222222;
+    
+    .name {
+        font-size: 2rem;
     }
-  </style>
+    
+    .profile-image {
+        width: 150px;
+        height: 150px;
+    }
+
+    .side-div, .blog-side {
+        display: none;
+    }
+}.blog-list {
+    display: flex;
+    flex-direction: column; /* stack vertically */
+    gap: 30px;
+}
+
+.blog-card {
+    width: 80%;
+    margin-left: 10%;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: rgba(245, 245, 245, 0.6);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.blog-card-img {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    object-position: top;
+}
+
+.blog-card-info {
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.blog-card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c2c2c;
+    margin: 0;
+}
+
+.blog-card-desc {
+    font-size: 1rem;
+    color: #555;
+    margin: 0;
+    white-space: nowrap; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+</style>
 </head>
 <body>
-<div align="center">
-  <img src="guard.jpg" width="540"><br>
-  <em>fearlessly Guarding the website until it's built <br>(newbie's first shift)</em>
-</div>
+
+  <section class="header-section">
+    <div class="side-div">
+        <canvas id="conway-left"></canvas>
+    </div>
+    <div class="middle-div">
+        <div class="header-container">
+            <img class="profile-image" alt="profile photo" src="assets/my_pic.jpeg">
+            <div class="header-content">
+                <h1 class="name">Dhia naouali</h1>
+                <div class="links">
+                    <a href="mailto:dhia12naouali@gmail.com">EMAIL</a>
+                    <span class="separator">|</span>
+                    <a target="_blank" href="https://www.linkedin.com/in/dhia-12-naouali/">LINKEDIN</a>
+                    <span class="separator">|</span>
+                    <a target="_blank" href="https://github.com/Dhia-naouali">GITHUB</a>
+                    <span class="separator">|</span>
+                    <a target="_blank" href="https://x.com/Dhia_naouali_">TWITTER/X</a>
+                </div>
+                <p class="tagline">
+                    short short short short short short short short short short short short short short
+                </p>
+                <p class="bio">
+                    intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro 
+                    intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro 
+                    intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro intro 
+                    <br><br>
+                    TLDR: TLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDRTLDR
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="side-div">
+        <canvas id="conway-right"></canvas>
+    </div>
+</section>
+
+
+
+<section class="blog-section">
+    <div class="blog-side">
+        <canvas id="blog-left"></canvas>
+    </div>
+    <div class="blog-middle">
+        <h2 class="section-title">Blog & Notes</h2>
+
+        <div class="blog-list">
+
+          <div class="blog-card">
+            <img src="https://bittersweet-yarn-df1.notion.site/image/attachment%3A927b489a-6430-471d-9fa7-843212aff397%3AWake_up_Struggle_Sleep_(8).png?table=block&id=2590b1a7-76e1-80ed-a44d-cf30931a18de&spaceId=aab0b1a7-76e1-8175-b525-0003dbcbdc9c&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img">
+            <div class="blog-card-info">
+              <h3 class="blog-card-title">Dinov3 in pure JAX</h3>
+              <p class="blog-card-desc">unofficial JAX implementation of DinoV3, translated in full from the original Meta PyTroch reference implementation</p>
+            </div>
+          </div>
+
+          <div class="blog-card">
+            <img src="https://decisive-stomach-548.notion.site/image/attachment%3A5d7146db-5e72-4602-a37a-eb80412f7a57%3AWake_up_Struggle_Sleep_(4).png?table=block&id=257425cc-edaa-8072-8251-e7dc2cd368d7&spaceId=a7e425cc-edaa-81cf-be46-0003e6f10ecb&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img">
+            <div class="blog-card-info">
+              <h3 class="blog-card-title">Mechanistic Interpretability on Vision Models</h3>
+              <p class="blog-card-desc">performing mechanistic interpretability on inceptionV1, from linear prob and sparse direction maximization to adversarial and ciruict patching & ablation</p>
+            </div>
+          </div>
+
+          <div class="blog-card">
+            <img src="https://decisive-stomach-548.notion.site/image/attachment%3Ac92a384a-c71b-40aa-9603-cc63efb14f76%3Amedia_images_sample_20.000000_85_fe1f49252f55799d0c85.png?table=block&id=232425cc-edaa-806b-9779-c0b3880190de&spaceId=a7e425cc-edaa-81cf-be46-0003e6f10ecb&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img">
+            <div class="blog-card-info">
+              <h3 class="blog-card-title">Generative Adversarial Network</h3>
+              <p class="blog-card-desc">conducting ablation study on most common Generative Adversarial Netwroks in literature on cat faces [DCGAN, WGAN-GP, SAGAN, RAGAN, StyleGAN, ...]</p>
+            </div>
+          </div>
+
+          <br>
+          <br>
+          <br>
+
+
+
+        </div>
+    </div>
+
+  <div class="blog-side">
+        <canvas id="blog-right"></canvas>
+  </div>
+
+</section>
+
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+    const gameLeft = conway.conway("conway-left", {
+        cellSize: 8,
+        gridWidth: 20,
+        gridHeight: 30,
+        backgroundColor: "rgba(212, 232, 197, 1)",
+        cellColor: "rgba(76, 138, 95, 0.8)",
+        deadCellColor: "rgba(215, 74, 74, 0.5)",
+        gridColor: "rgba(0, 0, 0, 0.05)",
+        showGrid: false,
+        showDead: true,
+        animationSpeed: 800,
+        toroidal: true
+    });
+    const gameRight = conway.conway("conway-right", {
+        cellSize: 8,
+        gridWidth: 20,
+        gridHeight: 30,
+        backgroundColor: "rgba(212, 232, 197, 1)",
+        cellColor: "rgba(215, 74, 74, 0.5)",
+        deadCellColor: "rgba(76, 138, 95, 0.8)",
+        gridColor: "rgba(0, 0, 0, 0.05)",
+        showGrid: false,
+        showDead: true,
+        animationSpeed: 600,
+        toroidal: false
+    });
+    gameLeft.place(conway.patterns.pulsar, 3, 8);
+    gameLeft.start();
+
+    gameRight.place(conway.patterns.pulsar, 1, 3);
+    gameRight.start();
+
+
+    const blogLeft = conway.conway("blog-left", {
+        cellSize: 32,
+        gridWidth: 20,
+        gridHeight: 40,
+        cellColor: "rgba(13, 63, 68, 1)",
+        deadCellColor: "rgba(215, 74, 74, 0.5)", // pink
+        gridColor: "rgba(0, 0, 0, 0)",
+        showGrid: false,
+        animationSpeed: 960,
+        toroidal: true
+    });
+
+    const blogRight = conway.conway("blog-right", {
+        cellSize: 32,
+        gridWidth: 20,
+        gridHeight: 40,
+        cellColor: "rgba(212, 232, 197, 1)",
+        deadCellColor: "rgba(76, 138, 95, 0.8)",
+        gridColor: "rgba(0, 0, 0, 0)",
+        showGrid: false,
+        animationSpeed: 960,
+        toroidal: true
+    });
+
+    blogRight.randomize(0.2);
+    blogRight.start();
+
+    blogLeft.randomize(0.2);
+    // gameRight.place(conway.patterns.glider, 1, 3);
+
+    blogLeft.start();
+
+  });
+
+</script>
 </body>
 </html>
+
+
+
+<!-- </div>
+<footer>Template kindly provided by <a href="https://psarlin.com/">Paul-Edouard Sarlin</a></footer>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script> -->
