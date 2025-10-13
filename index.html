@@ -186,7 +186,7 @@ body {
     width: 100%;
     height: 240px;
     object-fit: cover;
-    object-position: top;
+    object-position: top left;
 }
 
 .blog-card-info {
@@ -279,12 +279,37 @@ body {
               <p class="blog-card-desc">performing mechanistic interpretability on inceptionV1, from linear prob and sparse direction maximization to adversarial and ciruict patching & ablation</p>
             </div>
           </div>
+          <div class="blog-card">
+            <img src="https://www.kornia.org/tutorials/tutorials/assets/adaptive_discriminator_augmentation_preset.png" alt="Blog 1" class="blog-card-img">
+            <div class="blog-card-info">
+              <h3 class="blog-card-title">Adaptive Discriminator Augmentation (ADA) tutorial with kornia</h3>
+              <p class="blog-card-desc">submitted an ADA tutorial with kornia for on differentiable, on device augmentation to train GANs</p>
+            </div>
+          </div>
+
 
           <div class="blog-card">
             <img src="https://decisive-stomach-548.notion.site/image/attachment%3Ac92a384a-c71b-40aa-9603-cc63efb14f76%3Amedia_images_sample_20.000000_85_fe1f49252f55799d0c85.png?table=block&id=232425cc-edaa-806b-9779-c0b3880190de&spaceId=a7e425cc-edaa-81cf-be46-0003e6f10ecb&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img">
             <div class="blog-card-info">
               <h3 class="blog-card-title">Generative Adversarial Network</h3>
               <p class="blog-card-desc">conducting ablation study on most common Generative Adversarial Netwroks in literature on cat faces [DCGAN, WGAN-GP, SAGAN, RAGAN, StyleGAN, ...]</p>
+            </div>
+          </div>
+
+          <div class="blog-card">
+            <img src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*YE7DbhwsSS-__xq5YFKDxA.png" alt="Blog 1" class="blog-card-img">
+            <div class="blog-card-info">
+              <h3 class="blog-card-title">maximal update Parameterization</h3>
+              <p class="blog-card-desc">muP briefly explained in a blog post</p>
+            </div>
+          </div>
+
+
+          <div class="blog-card">
+            <img src="https://media.licdn.com/dms/image/v2/D4E12AQGGrbZlL9NbMA/article-cover_image-shrink_720_1280/B4EZUkocMQH0AM-/0/1740076337257?e=1762992000&v=beta&t=XtB1fcVwo_-I5iokuv0NTKfikvHBIfZepRKA0yzKNSU" alt="Blog 1" class="blog-card-img">
+            <div class="blog-card-info">
+              <h3 class="blog-card-title">Neural Nets Beneath the black box</h3>
+              <p class="blog-card-desc">an intuition focuse introduction to neural networks delivered to a university students club</p>
             </div>
           </div>
 
@@ -340,35 +365,33 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
     const blogLeft = conway.conway("blog-left", {
-        cellSize: 32,
-        gridWidth: 20,
-        gridHeight: 40,
+        cellSize: 24,
+        gridWidth: 30,
+        gridHeight: 60,
         cellColor: "rgba(13, 63, 68, 1)",
         deadCellColor: "rgba(215, 74, 74, 0.5)", // pink
         gridColor: "rgba(0, 0, 0, 0)",
         showGrid: false,
-        animationSpeed: 960,
+        animationSpeed: 3200,
         toroidal: true
     });
 
     const blogRight = conway.conway("blog-right", {
-        cellSize: 32,
-        gridWidth: 20,
-        gridHeight: 40,
+        cellSize: 24,
+        gridWidth: 30,
+        gridHeight: 60,
         cellColor: "rgba(212, 232, 197, 1)",
         deadCellColor: "rgba(76, 138, 95, 0.8)",
         gridColor: "rgba(0, 0, 0, 0)",
         showGrid: false,
-        animationSpeed: 960,
+        animationSpeed: 3200,
         toroidal: true
     });
 
-    blogRight.randomize(0.2);
+    blogRight.randomize(0.1);
     blogRight.start();
 
-    blogLeft.randomize(0.2);
-    // gameRight.place(conway.patterns.glider, 1, 3);
-
+    blogLeft.randomize(0.1);
     blogLeft.start();
 
   });
