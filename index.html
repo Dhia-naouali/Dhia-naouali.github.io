@@ -8,257 +8,248 @@
 <title>Dhia naouali</title>
 <script src="https://unpkg.com/@rankdim/conway@0.5.0/dist/conway.umd.cjs"></script>
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+:root{
+  --bg: #fcfcff;
+  --text: #111418; 
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --link: #0969da;
+  --link-hover: #054ea5;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  --size-body: 15.5px;
+  --size-lead: 17px;
+  --lh: 1.75;
+
+  --container: 980px;
+  --radius: 14px;
+  --circle: 999px;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
 }
-/* div{
-    border: 1px solid;
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg: #fbfefe;
+    --text: #0b0d10;
+    --muted: #a9a9b2;
+    --border: #1f2937;
+    --link: #58a6ff;
+    --link-hover: #3a86ff;
+  }
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+html, body{ height:100%; }
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+  line-height: var(--lh);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a{ color: var(--link); text-decoration: none; font-weight: 600; }
+a:hover, a:focus{ color: var(--link-hover); text-decoration: underline; }
+p{ margin: 0 0 14px; }
+hr{
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
+}
+/* 
+.header-section > .side-div:first-child{ margin-right: -48px; }
+.header-section > .side-div:last-child{  margin-left:  -16px; } */
+
+.header-section{
+  /* background-color:#dbefcc; */
+  padding: 32px 20px 28px;
+  padding-left: 12px;
+  padding-right: 12px;
+  display: flex;
+  gap: 0;
+  border-bottom: 0.1px solid var(--border);
+}
+
+.side-div{
+  width: 120px;
+  background: transparent;
+  position: relative;
+}
+.side-div canvas{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+}
+
+.middle-div{ flex:1; }
+
+.header-container{
+  max-width: var(--container);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.profile-image{
+  width: 224px; height: 224px;
+  border-radius: var(--circle);
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+
+.header-content{ flex:1; }
+
+.name{
+  font-size: clamp(34px, 6vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  color: var(--text);
+}
+
+.links{
+  margin-bottom: 16px;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+.separator{ color: var(--muted); margin: 0 8px; }
+
+.links a{ color: var(--link); font-weight: 700; }
+.links a:hover{ color: var(--link-hover); text-decoration: underline; }
+
+.pink-link{ color: var(--link); font-weight: 700; }
+.pink-link:hover{ color: var(--link-hover); }
+
+.tagline{
+  font-size: var(--size-lead);
+  font-weight: 700;
+  margin: 10px 0 10px;
+  color: var(--text);
+}
+.bio{
+  font-size: 0.96rem;
+  color: var(--text);
+}
+.bio strong{ font-weight: 700; }
+
+
+.email-btn{ position: relative; cursor: pointer; }
+.email-btn .tooltip{
+  visibility: hidden; opacity: 0;
+  position: absolute; bottom: 120%; left: 50%;
+  transform: translateX(-50%);
+  background: var(--text); color: var(--bg);
+  padding: 4px 8px; border-radius: 6px;
+  font-size: 0.8rem; white-space: nowrap;
+  transition: opacity .25s ease;
+  pointer-events: none; z-index: 10;
+}
+.email-btn.show-tooltip .tooltip{ visibility: visible; opacity: 1; }
+
+.blog-section{
+  background: var(--bg);
+  display: flex; justify-content: center; flex-wrap: wrap;
+}
+
+.blog-side{
+  width: 22%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(12, 1fr);
+}
+.blog-side canvas{
+  width: 92%; margin: 0 4%;
+  height: 100%; min-height: 100px;
+}
+
+.blog-middle{
+  flex: 1;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 28px 20px 56px;
+}
+
+.section-title{
+  font-size: clamp(20px, 3.2vw, 26px);
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 18px;
+}
+
+.blog-list{
+  display: flex; flex-direction: column;
+  gap: 32px;
+}
+
+.blog-card-link{ display:block; }
+
+.blog-card{
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  background: transparent;
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+}
+/* .blog-card:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+  border-color: rgba(0,0,0,.08);
 } */
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    line-height: 1.6;
-    color: #333;
+.blog-card-img{
+  width: 100%; height: 220px; object-fit: cover; object-position: top left;
+  display:block;
 }
 
-.header-section {
-    background-color: #d4e8c5;
-    padding: 30px 40px;
-    display: flex;
-    gap: 0;
+.blog-card-info{
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
 }
 
-.side-div {
-    width: 150px;
-    background-color: transparent;
-    position: relative;
+.blog-card-title{
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
 }
 
-.side-div canvas {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
+.blog-card-desc{
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.middle-div {
-    flex: 1;
+/* ===== Responsive ===== */
+@media (max-width: 920px){
+  .side-div, .blog-side{ display:none; }
+  .header-container{ gap: 18px; }
+  .profile-image{ width: 132px; height: 132px; }
+  .blog-middle{ padding-top: 22px; }
 }
 
-.header-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: flex;
+@media (max-width: 680px){
+  .header-container{
+    flex-direction: column;
     align-items: center;
-    gap: 60px;
-}
-
-.profile-image {
-    width: 250px;
-    height: 250px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 5px solid white;
-    flex-shrink: 0;
-}
-
-.header-content {
-    flex: 1;
-}
-
-.name {
-    font-size: 3rem;
-    font-weight: 400;
-    margin-bottom: 15px;
-    color: #2c2c2c;
-}
-
-.links {
-    margin-bottom: 25px;
-    font-size: 0.9rem;
-}
-
-.links a:not(.pink-link) {
-    color: #0e8d6c;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.links a:not(.pink-link):hover {
-    text-decoration: underline;
-}
-
-.separator {
-    color: #2c2c2c;
-    margin: 0 5px;
-}
-
-.tagline {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #2c2c2c;
-}
-
-.bio {
-    font-size: 1rem;
-    line-height: 1.7;
-    color: #2c2c2c;
-}
-
-.bio strong {
-    font-weight: 600;
-}
-
-
-.blog-section {
-    background-color: white;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap; 
-}
-
-.blog-side {
-    width: 24%;
-    min-height: 100%;
-    height: auto;
-    display: grid;
-    /* grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); */
-    grid-template-columns: repeat(3, 1fr); /* 4 columns */
-    grid-template-rows: repeat(12, 1fr);    /* 5 rows */
-}
-
-.blog-side canvas {
-    width: 92%;
-    /* margin-bottom: 4%; */
-    margin-left: 4%;
-    margin-right: 4%;
-    height: 100%;
-    min-height: 100px;
-}
-
-.blog-middle {
-    flex: 1;
-    max-width: 52%;
-    margin: 0 auto;
-}
-
-.section-title {
-    font-size: 2rem;
-    font-weight: 400;
-    margin-bottom: 30px;
-    color: #2c2c2c;
-}
-
-@media (max-width: 768px) {
-    .header-container {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .name {
-        font-size: 2rem;
-    }
-    
-    .profile-image {
-        width: 150px;
-        height: 150px;
-    }
-
-    .side-div, .blog-side {
-        display: none;
-    }
-}.blog-list {
-    display: flex;
-    flex-direction: column; /* stack vertically */
-    gap: 50px;
-}
-
-.blog-card {
-    width: 80%;
-    margin-left: 10%;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background-color: rgba(245, 245, 245, 0.6);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-
-.blog-card-img {
-    width: 100%;
-    height: 240px;
-    object-fit: cover;
-    object-position: top left;
-}
-
-.blog-card-info {
-    padding: 15px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.blog-card-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #2c2c2c;
-    margin: 0;
-}
-
-.blog-card-desc {
-    font-size: 1rem;
-    color: #555;
-    margin: 0;
-    white-space: nowrap; 
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pink-link {
-    color: rgba(215, 74, 74, 1);
-    text-decoration: none;
-    font-weight: 800;
-}
-
-.pink-link:hover {
-    color: rgba(215, 74, 74, 1);
-}
-.email-btn {
-    position: relative;
-    cursor: pointer;
-    color: #0e8d6c;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.email-btn .tooltip {
-    visibility: hidden;
-    background-color: #2c2c2c;
-    color: #fff;
     text-align: center;
-    border-radius: 4px;
-    padding: 4px 8px;
-    position: absolute;
-    bottom: 120%;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.8rem;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    white-space: nowrap;
-    z-index: 10;
+  }
+  .name{ font-size: clamp(30px, 8vw, 40px); }
+  .links{ justify-content: center; }
 }
 
-.email-btn.show-tooltip .tooltip {
-    visibility: visible;
-    opacity: 1;
+footer{
+  margin-top: 36px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
 }
+
 </style>
 </head>
 <body>
@@ -293,6 +284,7 @@ body {
                     I build, read, and experiment with PyTorch, JAX, and distributed systems                    
                     <br><br>
                     actively looking for research / engineering opportunities.
+                    <!-- <br><br><br> -->
                 </p>
             </div>
         </div>
@@ -314,7 +306,7 @@ body {
         <div class="blog-list">
     <a href="https://bittersweet-yarn-df1.notion.site/JAX-Jit-Auto-diff-XLA-2590b1a776e180eda44dcf30931a18de?source=copy_link" target="_blank" class="blog-card-link">
         <div class="blog-card">
-            <img src="https://bittersweet-yarn-df1.notion.site/image/attachment%3A927b489a-6430-471d-9fa7-843212aff397%3AWake_up_Struggle_Sleep_(8).png?table=block&id=2590b1a7-76e1-80ed-a44d-cf30931a18de&spaceId=aab0b1a7-76e1-8175-b525-0003dbcbdc9c&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img" style="object-position: 20% 70%;">
+            <img src="https://bittersweet-yarn-df1.notion.site/image/attachment%3A927b489a-6430-471d-9fa7-843212aff397%3AWake_up_Struggle_Sleep_(8).png?table=block&id=2590b1a7-76e1-80ed-a44d-cf30931a18de&spaceId=aab0b1a7-76e1-8175-b525-0003dbcbdc9c&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img" style="object-position: 40% 70%;">
             <div class="blog-card-info">
                 <h3 class="blog-card-title">JAX notes: re-implementing Dinov3 in FSDP</h3>
                 <p class="blog-card-desc">unofficial JAX implementation of DinoV3, translated in full from the original Meta PyTroch reference implementation</p>
@@ -335,7 +327,7 @@ body {
 
     <a href="https://www.kornia.org/tutorials/nbs/adaptive_discriminator_augmentation_preset.html" target="_blank" class="blog-card-link">
         <div class="blog-card">
-            <img src="https://www.kornia.org/tutorials/tutorials/assets/adaptive_discriminator_augmentation_preset.png" alt="Blog 1" class="blog-card-img" style="object-position: 20% 80%;">
+            <img src="https://www.kornia.org/tutorials/tutorials/assets/adaptive_discriminator_augmentation_preset.png" alt="Blog 1" class="blog-card-img" style="object-position: 20% 82%;">
             <div class="blog-card-info">
               <h3 class="blog-card-title">Adaptive Discriminator Augmentation (ADA) tutorial with kornia</h3>
               <p class="blog-card-desc">submitted an ADA tutorial with kornia for on differentiable, on device augmentation to train GANs</p>
@@ -413,9 +405,9 @@ window.addEventListener("DOMContentLoaded", () => {
         cellSize: 8,
         gridWidth: 20,
         gridHeight: 30,
-        backgroundColor: "rgba(212, 232, 197, 1)",
-        cellColor: "rgba(76, 138, 95, 0.8)",
-        deadCellColor: "rgba(215, 74, 74, 0.5)",
+        backgroundColor: "rgba(212, 232, 197, 0)",
+        cellColor: "rgba(126, 158, 115, 0.8)",
+        deadCellColor: "rgba(225, 84, 84, 0.8)",
         gridColor: "rgba(0, 0, 0, 0.05)",
         showGrid: false,
         showDead: true,
@@ -426,20 +418,20 @@ window.addEventListener("DOMContentLoaded", () => {
         cellSize: 8,
         gridWidth: 20,
         gridHeight: 30,
-        backgroundColor: "rgba(212, 232, 197, 1)",
-        cellColor: "rgba(215, 74, 74, 0.5)",
-        deadCellColor: "rgba(76, 138, 95, 0.8)",
+        backgroundColor: "rgba(212, 232, 197, 0)",
+        cellColor: "rgba(230, 84, 84, 0.5)",
+        deadCellColor: "rgba(86, 148, 105, 0.8)",
         gridColor: "rgba(0, 0, 0, 0.05)",
         showGrid: false,
         showDead: true,
         animationSpeed: 2400,
         toroidal: false
     });
-    gameLeft.place(conway.patterns.pulsar, 3, 8);
-    gameLeft.start();
+    // gameLeft.place(conway.patterns.pulsar, 3, 8);
+    // gameLeft.start();
     
-    gameRight.place(conway.patterns.pulsar, 1, 3);
-    gameRight.start();    
+    // gameRight.place(conway.patterns.pulsar, 1, 3);
+    // gameRight.start();    
     
 
     let geta3 = []
@@ -451,7 +443,7 @@ window.addEventListener("DOMContentLoaded", () => {
         }
     }
     function tconwayi(numCubes, id){
-        for (let i = 0; i < numCubes; i+=Math.ceil(Math.random()*10)) {
+        for (let i = 0; i < numCubes; i+=Math.ceil(Math.random()*28)) {
             let blogRight = null
             if (Math.ceil(Math.random()*2) == 1){
                 blogRight = conway.conway(id+i, {
@@ -471,7 +463,7 @@ window.addEventListener("DOMContentLoaded", () => {
                     gridHeight: 30,
                     backgroundColor: "rgba(212, 232, 197, 0)",
                     cellColor: "rgba(220, 100, 100, 0.3)",
-                    deadCellColor: "rgba(76, 138, 95, 0.6)",
+                    deadCellColor: "rgba(20, 108, 195, 0.2)",
                     gridColor: "rgba(0, 0, 0, 0.00)",
                     showGrid: false,
                     showDead: true,
