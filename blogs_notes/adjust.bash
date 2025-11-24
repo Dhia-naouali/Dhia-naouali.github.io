@@ -1,3 +1,6 @@
+
+# python loconotion   --chromedriver /usr/bin/chromedriver notion-link
+
 for f in */index.html; do
   perl -i -pe '
     if (m|</head>|) {
