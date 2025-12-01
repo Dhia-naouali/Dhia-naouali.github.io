@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22><text y=%2222%22 font-size=%2224%22>🍪</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22><text y=%2222%22 font-size=%2224%22>🪐</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Dhia naouali</title>
 <script src="https://unpkg.com/@rankdim/conway@0.5.0/dist/conway.umd.cjs"></script>
@@ -58,12 +57,10 @@ hr{
   border-top: 1px solid var(--border);
   margin: 28px 0;
 }
-/* 
-.header-section > .side-div:first-child{ margin-right: -48px; }
-.header-section > .side-div:last-child{  margin-left:  -16px; } */
+
+.header-section{ padding: 20px 12px 16px; } 
 
 .header-section{
-  /* background-color:#dbefcc; */
   padding: 32px 20px 28px;
   padding-left: 12px;
   padding-right: 12px;
@@ -136,7 +133,6 @@ hr{
 }
 .bio strong{ font-weight: 700; }
 
-
 .email-btn{ position: relative; cursor: pointer; }
 .email-btn .tooltip{
   visibility: hidden; opacity: 0;
@@ -152,14 +148,18 @@ hr{
 
 .blog-section{
   background: var(--bg);
-  display: flex; justify-content: center; flex-wrap: wrap;
+  display: flex; 
+  justify-content: center; 
+  flex-wrap: wrap;
+  height: 1600px;
 }
 
 .blog-side{
   width: 22%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(12, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  height: 100%;
 }
 .blog-side canvas{
   width: 92%; margin: 0 4%;
@@ -167,10 +167,11 @@ hr{
 }
 
 .blog-middle{
-  flex: 1;
+  flex: 0 1 40%;
   max-width: var(--container);
   margin: 0 auto;
   padding: 28px 20px 56px;
+  height: 100%;
 }
 
 .section-title{
@@ -195,11 +196,6 @@ hr{
   background: transparent;
   transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
 }
-/* .blog-card:hover{
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
-  border-color: rgba(0,0,0,.08);
-} */
 
 .blog-card-img{
   width: 100%; height: 220px; object-fit: cover; object-position: top left;
@@ -223,6 +219,13 @@ hr{
   color: var(--muted);
   margin: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+#embed {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
 }
 
 /* ===== Responsive ===== */
@@ -249,268 +252,174 @@ footer{
   color: var(--muted);
   font-size: 13px;
 }
-
 </style>
 </head>
 <body>
 
-  <section class="header-section">
-    <div class="side-div">
-        <canvas id="conway-left"></canvas>
-    </div>
-    <div class="middle-div">
-        <div class="header-container">
-            <img class="profile-image" alt="profile photo" src="assets/my_pic.jpeg">
-            <div class="header-content">
-                <h1 class="name">Dhia naouali</h1>
-                <div class="links">
-                    <!-- <a href="mailto:dhia12naouali@gmail.com">EMAIL</a> -->
-                    <a class="email-btn" onclick="copyEmail()">EMAIL
-                        <span class="tooltip">Copied!</span>
-                    </a>
-                    <span class="separator">|</span>
-                    <a class="pink-link" target="_blank" href="https://github.com/Dhia-naouali">GITHUB</a>
-                    <span class="separator">|</span>
-                    <a target="_blank" href="https://www.linkedin.com/in/dhia-12-naouali/">LINKEDIN</a>
-                    <span class="separator">|</span>
-                    <a class="pink-link" target="_blank" href="https://x.com/Dhia_naouali_">TWITTER/X</a>
-                </div>
-                <p class="tagline">
-                    Penultimate-year Software Engineering Student, exploring frontier Machine Learning
-                </p>
-                <p class="bio">
-
-                    Exploring the depths of Machine Learning, diffusion models, flow matching, SSL, interpretability and beyond
-                    I build, read, and experiment with PyTorch, JAX, and distributed systems                    
-                    <br><br>
-                    actively looking for research / engineering opportunities.
-                    <!-- <br><br><br> -->
-                </p>
-            </div>
+<section class="header-section">
+  <div class="side-div">
+    <canvas id="conway-left"></canvas>
+  </div>
+  <div class="middle-div">
+    <div class="header-container">
+      <img class="profile-image" alt="profile photo" src="assets/my_pic.jpeg">
+      <div class="header-content">
+        <h1 class="name">Dhia naouali</h1>
+        <div class="links">
+          <a class="email-btn" onclick="copyEmail()">EMAIL
+            <span class="tooltip">Copied!</span>
+          </a>
+          <span class="separator">|</span>
+          <a class="pink-link" target="_blank" href="https://github.com/Dhia-naouali">GITHUB</a>
+          <span class="separator">|</span>
+          <a target="_blank" href="https://www.linkedin.com/in/dhia-12-naouali/">LINKEDIN</a>
+          <span class="separator">|</span>
+          <a class="pink-link" target="_blank" href="https://x.com/Dhia_naouali_">TWITTER/X</a>
         </div>
+        <p class="tagline">
+          Penultimate-year Software Engineering Student, exploring frontier Machine Learning
+        </p>
+        <p class="bio">
+          Exploring the depths of Machine Learning, diffusion models, flow matching, SSL, interpretability and beyond
+          I build, read, and experiment with PyTorch, JAX, and distributed systems                    
+          <br><br>
+          actively looking for research / engineering opportunities.
+        </p>
+      </div>
     </div>
-    <div class="side-div">
-        <canvas id="conway-right"></canvas>
-    </div>
+  </div>
+  <div class="side-div">
+    <canvas id="conway-right"></canvas>
+  </div>
 </section>
-
-
 
 <section class="blog-section">
-    <div class="blog-side">
-        <canvas id="blog-left"></canvas>
-    </div>
-    <div class="blog-middle">
-        <h2 class="section-title">Blogs & Notes</h2>
-
-        <div class="blog-list">
-    <a href="https://bittersweet-yarn-df1.notion.site/JAX-Jit-Auto-diff-XLA-2590b1a776e180eda44dcf30931a18de?source=copy_link" target="_blank" class="blog-card-link">
-        <div class="blog-card">
-            <img src="https://bittersweet-yarn-df1.notion.site/image/attachment%3A927b489a-6430-471d-9fa7-843212aff397%3AWake_up_Struggle_Sleep_(8).png?table=block&id=2590b1a7-76e1-80ed-a44d-cf30931a18de&spaceId=aab0b1a7-76e1-8175-b525-0003dbcbdc9c&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img" style="object-position: 40% 70%;">
-            <div class="blog-card-info">
-                <h3 class="blog-card-title">JAX notes: re-implementing Dinov3 in FSDP</h3>
-                <p class="blog-card-desc">unofficial JAX implementation of DinoV3, translated in full from the original Meta PyTroch reference implementation</p>
-            </div>
-        </div>
-    </a>
-
-    <a href="https://decisive-stomach-548.notion.site/Mechanistic-Interpretability-257425ccedaa80728251e7dc2cd368d7?source=copy_link" target="_blank" class="blog-card-link">
-          <div class="blog-card">
-            <img src="https://decisive-stomach-548.notion.site/image/attachment%3A5d7146db-5e72-4602-a37a-eb80412f7a57%3AWake_up_Struggle_Sleep_(4).png?table=block&id=257425cc-edaa-8072-8251-e7dc2cd368d7&spaceId=a7e425cc-edaa-81cf-be46-0003e6f10ecb&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img">
-            <div class="blog-card-info">
-              <h3 class="blog-card-title">Mechanistic Interpretability on Vision Models</h3>
-              <p class="blog-card-desc">performing mechanistic interpretability on inceptionV1, from linear prob and sparse direction maximization to adversarial and ciruict patching & ablation</p>
-            </div>
-          </div>
-    </a>
-
-
-    <a href="https://www.kornia.org/tutorials/nbs/adaptive_discriminator_augmentation_preset.html" target="_blank" class="blog-card-link">
-        <div class="blog-card">
-            <img src="https://www.kornia.org/tutorials/tutorials/assets/adaptive_discriminator_augmentation_preset.png" alt="Blog 1" class="blog-card-img" style="object-position: 20% 82%;">
-            <div class="blog-card-info">
-              <h3 class="blog-card-title">Adaptive Discriminator Augmentation (ADA) tutorial with kornia</h3>
-              <p class="blog-card-desc">submitted an ADA tutorial with kornia for on differentiable, on device augmentation to train GANs</p>
-            </div>
-          </div>
-    </a>
-
-    <a href="https://decisive-stomach-548.notion.site/Generative-Adversarial-Networks-232425ccedaa806b9779c0b3880190de" target="_blank" class="blog-card-link">
-          <div class="blog-card">
-            <img src="https://decisive-stomach-548.notion.site/image/attachment%3Ac92a384a-c71b-40aa-9603-cc63efb14f76%3Amedia_images_sample_20.000000_85_fe1f49252f55799d0c85.png?table=block&id=232425cc-edaa-806b-9779-c0b3880190de&spaceId=a7e425cc-edaa-81cf-be46-0003e6f10ecb&width=2000&userId=&cache=v2" alt="Blog 1" class="blog-card-img" style="object-position: 20% 32%;">
-            <div class="blog-card-info">
-              <h3 class="blog-card-title">Generative Adversarial Network</h3>
-              <p class="blog-card-desc">conducting ablation study on most common Generative Adversarial Netwroks in literature on cat faces [DCGAN, WGAN-GP, SAGAN, RAGAN, StyleGAN, ...]</p>
-            </div>
-          </div>
-    </a>
-
-
-    <a href="https://medium.com/@dhia12naouali/mup-maximal-update-parameterization-scaling-neural-nets-predictably-d04d3648e62e" target="_blank" class="blog-card-link">
-          <div class="blog-card">
-            <img src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*YE7DbhwsSS-__xq5YFKDxA.png" alt="Blog 1" class="blog-card-img" style="object-position: 20% 21%;">
-            <div class="blog-card-info">
-              <h3 class="blog-card-title">maximal update Parameterization</h3>
-              <p class="blog-card-desc">muP briefly explained in a blog post</p>
-            </div>
-          </div>
-    </a>
-
-
-    <a href="https://pytorch.org/blog/pytorch-docathon-2025-wrap-up/" target="_blank" class="blog-card-link">
-          <div class="blog-card">
-            <img src="https://pytorch.org/wp-content/uploads/2025/06/PyTorch-Docathon-2025-Top-Community-Contributors-1-1024x536.png" alt="Blog 1" class="blog-card-img">
-            <div class="blog-card-info">
-              <h3 class="blog-card-title">Pytorch Docathon 2025</h3>
-              <p class="blog-card-desc">got 2nd place: migrating torch docs to reStructuredText, made all internal packages explicit</p>
-            </div>
-          </div>
-    </a>
-
-
-    <a href="https://www.linkedin.com/pulse/neural-nets-beneath-black-box-dhia-naouali-b2xoe/?trackingId=Qrf6hOTMTkeCdRDOmsO65Q%3D%3D" target="_blank" class="blog-card-link">
-          <div class="blog-card">
-            <img src="https://media.licdn.com/dms/image/v2/D4E12AQGGrbZlL9NbMA/article-cover_image-shrink_720_1280/B4EZUkocMQH0AM-/0/1740076337257?e=1762992000&v=beta&t=XtB1fcVwo_-I5iokuv0NTKfikvHBIfZepRKA0yzKNSU" alt="Blog 1" class="blog-card-img">
-            <div class="blog-card-info">
-              <h3 class="blog-card-title">Neural Nets Beneath the black box</h3>
-              <p class="blog-card-desc">an intuition focuse introduction to neural networks delivered to a university students club</p>
-            </div>
-          </div>
-    </a>
-          <br>
-        </div>
-    </div>
-
   <div class="blog-side">
-        <canvas id="blog-right"></canvas>
+    <canvas id="blog-left"></canvas>
   </div>
-
+  <div class="blog-middle">
+    <iframe
+      id="embed"
+      src="/loconotion/dist/blogs-technical-notes/index.html">
+    </iframe>
+  </div>
+  <div class="blog-side">
+    <canvas id="blog-right"></canvas>
+  </div>
 </section>
 
-
 <script>
-    function copyEmail() {
-    const email = "dhia12naouali@gmail.com";
-    navigator.clipboard.writeText(email).then(() => {
-        const btn = document.querySelector('.email-btn');
-        const tooltip = btn.querySelector('.tooltip');
-        btn.classList.add('show-tooltip');
-        setTimeout(() => {
-            btn.classList.remove('show-tooltip');
-        }, 1200);
-    });
+function copyEmail() {
+  const email = "dhia12naouali@gmail.com";
+  navigator.clipboard.writeText(email).then(() => {
+    const btn = document.querySelector('.email-btn');
+    const tooltip = btn.querySelector('.tooltip');
+    btn.classList.add('show-tooltip');
+    setTimeout(() => {
+      btn.classList.remove('show-tooltip');
+    }, 1200);
+  });
 }
+
 window.addEventListener("DOMContentLoaded", () => {
-    const gameLeft = conway.conway("conway-left", {
-        cellSize: 8,
-        gridWidth: 20,
-        gridHeight: 30,
-        backgroundColor: "rgba(212, 232, 197, 0)",
-        cellColor: "rgba(126, 158, 115, 0.8)",
-        deadCellColor: "rgba(225, 84, 84, 0.8)",
-        gridColor: "rgba(0, 0, 0, 0.05)",
-        showGrid: false,
-        showDead: true,
-        animationSpeed: 1600,
-        toroidal: true
-    });
-    const gameRight = conway.conway("conway-right", {
-        cellSize: 8,
-        gridWidth: 20,
-        gridHeight: 30,
-        backgroundColor: "rgba(212, 232, 197, 0)",
-        cellColor: "rgba(230, 84, 84, 0.5)",
-        deadCellColor: "rgba(86, 148, 105, 0.8)",
-        gridColor: "rgba(0, 0, 0, 0.05)",
-        showGrid: false,
-        showDead: true,
-        animationSpeed: 2400,
-        toroidal: false
-    });
-    // gameLeft.place(conway.patterns.pulsar, 3, 8);
-    // gameLeft.start();
-    
-    // gameRight.place(conway.patterns.pulsar, 1, 3);
-    // gameRight.start();    
-    
+  const gameLeft = conway.conway("conway-left", {
+    cellSize: 8,
+    gridWidth: 20,
+    gridHeight: 30,
+    backgroundColor: "rgba(212, 232, 197, 0)",
+    cellColor: "rgba(126, 158, 115, 0.8)",
+    deadCellColor: "rgba(225, 84, 84, 0.8)",
+    gridColor: "rgba(0, 0, 0, 0.05)",
+    showGrid: false,
+    showDead: true,
+    animationSpeed: 1600,
+    toroidal: true
+  });
+  
+  const gameRight = conway.conway("conway-right", {
+    cellSize: 8,
+    gridWidth: 20,
+    gridHeight: 30,
+    backgroundColor: "rgba(212, 232, 197, 0)",
+    cellColor: "rgba(230, 84, 84, 0.5)",
+    deadCellColor: "rgba(86, 148, 105, 0.8)",
+    gridColor: "rgba(0, 0, 0, 0.05)",
+    showGrid: false,
+    showDead: true,
+    animationSpeed: 2400,
+    toroidal: false
+  });
 
-    let geta3 = []
-    function generateCubes(numCubes, container, id){
-        for (let i = 0; i < numCubes; i++) {
-            const cube = document.createElement('canvas');
-            cube.id = id+i
-            container.appendChild(cube);
-        }
+  let geta3 = []
+  
+  function generateCubes(numCubes, container, id){
+    for (let i = 0; i < numCubes; i++) {
+      const cube = document.createElement('canvas');
+      cube.id = id+i
+      container.appendChild(cube);
     }
-    function tconwayi(numCubes, id){
-        for (let i = 0; i < numCubes; i+=Math.ceil(Math.random()*28)) {
-            let blogRight = null
-            if (Math.ceil(Math.random()*2) == 1){
-                blogRight = conway.conway(id+i, {
-                    cellSize: 8,
-                    gridWidth: 20,
-                    gridHeight: 30,
-                    showGrid: false,
-                    showDead: true,
-                    animationSpeed: 1600,
-                    toroidal: false
-                });
-            }
-            else {
-                blogRight = conway.conway(id+i, {
-                    cellSize: 8,
-                    gridWidth: 20,
-                    gridHeight: 30,
-                    backgroundColor: "rgba(212, 232, 197, 0)",
-                    cellColor: "rgba(220, 100, 100, 0.3)",
-                    deadCellColor: "rgba(20, 108, 195, 0.2)",
-                    gridColor: "rgba(0, 0, 0, 0.00)",
-                    showGrid: false,
-                    showDead: true,
-                    animationSpeed: 1600,
-                    toroidal: false
-                });
-            }
-            geta3.push(blogRight)
-        }
+  }
+  
+  function tconwayi(numCubes, id){
+    for (let i = 0; i < numCubes; i+=Math.ceil(Math.random()*28)) {
+      let blogRight = null
+      if (Math.ceil(Math.random()*2) == 1){
+        blogRight = conway.conway(id+i, {
+          cellSize: 8,
+          gridWidth: 20,
+          gridHeight: 30,
+          showGrid: false,
+          showDead: true,
+          animationSpeed: 1600,
+          toroidal: false
+        });
+      }
+      else {
+        blogRight = conway.conway(id+i, {
+          cellSize: 8,
+          gridWidth: 20,
+          gridHeight: 30,
+          backgroundColor: "rgba(212, 232, 197, 0)",
+          cellColor: "rgba(220, 100, 100, 0.3)",
+          deadCellColor: "rgba(20, 108, 195, 0.2)",
+          gridColor: "rgba(0, 0, 0, 0.00)",
+          showGrid: false,
+          showDead: true,
+          animationSpeed: 1600,
+          toroidal: false
+        });
+      }
+      geta3.push(blogRight)
     }
-    let n = 32;
-    containers = document.getElementsByClassName('blog-side')
-    generateCubes(n, containers[1], 'blog-right')
-    tconwayi(n, 'blog-right')
-    generateCubes(n, containers[0], 'blog-left')
-    tconwayi(n, 'blog-left')
-        for(get3a of geta3){
-                const step = Math.ceil(Math.random() * 9)
-                console.log(step)
-                if(step < 3){
-                    get3a.place(conway.patterns.pulsar, 3, 8);
-                }
-                else if(step < 4){
-                    get3a.randomize(Math.random());
-                }
-                else if(step < 6){
-                    get3a.place(conway.patterns.toad, 3, 8);
-                }
-                else if(step < 8){
-                    get3a.place(conway.patterns.glider, 2, 2);
-                }
-                else
-                {
-                    get3a.place(conway.patterns.blinker, 2, 7);
-                }
-                get3a.start();
-            }
-        }
-    );
-
+  }
+  
+  let n = 24;
+  containers = document.getElementsByClassName('blog-side')
+  generateCubes(n, containers[1], 'blog-right')
+  tconwayi(n, 'blog-right')
+  generateCubes(n, containers[0], 'blog-left')
+  tconwayi(n, 'blog-left')
+  
+  for(get3a of geta3){
+    const step = Math.ceil(Math.random() * 9)
+    if(step < 3){
+      get3a.place(conway.patterns.pulsar, 3, 8);
+    }
+    else if(step < 4){
+      get3a.randomize(Math.random());
+    }
+    else if(step < 6){
+      get3a.place(conway.patterns.toad, 3, 8);
+    }
+    else if(step < 8){
+      get3a.place(conway.patterns.glider, 2, 2);
+    }
+    else {
+      get3a.place(conway.patterns.blinker, 2, 7);
+    }
+    get3a.start();
+  }
+});
 </script>
 </body>
 </html>
-
-
-<!-- </div>
-<footer>Template kindly provided by <a href="https://psarlin.com/">Paul-Edouard Sarlin</a></footer>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script> -->
