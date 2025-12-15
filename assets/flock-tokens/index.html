@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>flok of tokens</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Your React component -->
+    <script type="text/babel">
+        const { useEffect, useRef } = React;
+
+const SwirlingPoints = () => {
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+    
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(15, 15, 15);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    mountRef.current.appendChild(renderer.domElement);
+
+    // Interactive controls
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let cameraAngle = { theta: Math.PI / 4, phi: Math.PI / 4 };
+    let cameraDistance = 15;
+
+    const updateCameraPosition = () => {
+      camera.position.x = cameraDistance * Math.sin(cameraAngle.theta) * Math.cos(cameraAngle.phi);
+      camera.position.y = cameraDistance * Math.sin(cameraAngle.phi);
+      camera.position.z = cameraDistance * Math.cos(cameraAngle.theta) * Math.cos(cameraAngle.phi);
+      camera.lookAt(0, 3, 0);
+    };
+
+    const onMouseDown = (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      
+      const deltaX = e.clientX - previousMousePosition.x;
+      const deltaY = e.clientY - previousMousePosition.y;
+      
+      cameraAngle.theta -= deltaX * 0.01;
+      cameraAngle.phi -= deltaY * 0.01;
+      
+      cameraAngle.phi = Math.max(0.1, Math.min(Math.PI - 0.1, cameraAngle.phi));
+      
+      updateCameraPosition();
+      
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    };
+
+    const onMouseUp = () => {
+      isDragging = false;
+    };
+
+    const onWheel = (e) => {
+      e.preventDefault();
+      cameraDistance += e.deltaY * 0.05;
+      cameraDistance = Math.max(10, Math.min(50, cameraDistance));
+      updateCameraPosition();
+    };
+
+    renderer.domElement.addEventListener('mousedown', onMouseDown);
+    renderer.domElement.addEventListener('mousemove', onMouseMove);
+    renderer.domElement.addEventListener('mouseup', onMouseUp);
+    renderer.domElement.addEventListener('wheel', onWheel);
+
+    updateCameraPosition();
+
+    // Grid
+    const gridHelper = new THREE.GridHelper(20, 20, 0x888888, 0xaaaaaa);
+    scene.add(gridHelper);
+
+    // Create points - scattered initially
+    const pointCount = 40;
+    const points = [];
+    const goldPointIndex = Math.floor(pointCount / 2);
+    
+    const pointGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+    const pointMaterial = new THREE.MeshBasicMaterial({ color: 0x1a1a1a });
+    const goldMaterial = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+
+    // Define cluster centers for end state
+    const clusterCenters = [
+      { x: -3, y: 2, z: -3 },
+      { x: 3, y: 2, z: -3 },
+      { x: 3, y: 2, z: 3 },
+      { x: -3, y: 2, z: 3 },
+      { x: 0, y: 3, z: 0 }
+    ];
+
+    for (let i = 0; i < pointCount; i++) {
+      // Golden point starts in the middle, others scattered but on visible grid
+      let x, y, z;
+      if (i === goldPointIndex) {
+        x = 0;
+        y = 3;
+        z = 0;
+      } else {
+        x = (Math.random() - 0.5) * 18;
+        y = Math.random() * 4 + 0.5; // Stay visible above grid
+        z = (Math.random() - 0.5) * 18;
+      }
+      
+      const material = (i === goldPointIndex) ? goldMaterial : pointMaterial;
+      const mesh = new THREE.Mesh(pointGeometry, material);
+      mesh.position.set(x, y, z);
+      scene.add(mesh);
+
+      // Create projection line
+      const lineMaterial = new THREE.LineBasicMaterial({ color: 0xd0d0d0 });
+      const lineGeometry = new THREE.BufferGeometry();
+      const linePositions = new Float32Array(6);
+      lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+      const line = new THREE.Line(lineGeometry, lineMaterial);
+      scene.add(line);
+      
+      // Assign cluster target with much more noise
+      let clusterTarget;
+      if (i === goldPointIndex) {
+        clusterTarget = {
+          x: clusterCenters[4].x + (Math.random() - 0.5) * 2,
+          y: clusterCenters[4].y + (Math.random() - 0.5) * 2,
+          z: clusterCenters[4].z + (Math.random() - 0.5) * 2
+        };
+      } else {
+        const clusterIndex = Math.floor(Math.random() * 4);
+        const cluster = clusterCenters[clusterIndex];
+        clusterTarget = {
+          x: cluster.x + (Math.random() - 0.5) * 4,
+          y: cluster.y + (Math.random() - 0.5) * 3,
+          z: cluster.z + (Math.random() - 0.5) * 4
+        };
+      }
+      
+      // Individual movement characteristics
+      const individualSpeed = 0.5 + Math.random() * 0.5;
+      const individualPhase = Math.random() * Math.PI * 2;
+      const individualFreqX = 0.5 + Math.random() * 1.5;
+      const individualFreqY = 0.5 + Math.random() * 1.5;
+      const individualFreqZ = 0.5 + Math.random() * 1.5;
+      
+      points.push({
+        mesh,
+        line,
+        index: i,
+        isGold: i === goldPointIndex,
+        clusterTarget,
+        individualSpeed,
+        individualPhase,
+        individualFreqX,
+        individualFreqY,
+        individualFreqZ
+      });
+    }
+
+    // Animation parameters
+    let currentFrame = 0;
+    let timeSinceLastFrame = 0;
+    const totalCycleFrames = 80;
+    const baseFrameDuration = 1000;
+    const decayRate = 0.95;
+    const minFrameDuration = 200;
+    
+    const getFrameDuration = (frameNum) => {
+      const cycleFrame = frameNum % totalCycleFrames;
+      const halfCycle = totalCycleFrames / 2;
+      
+      if (cycleFrame < halfCycle) {
+        return Math.max(minFrameDuration, baseFrameDuration * Math.pow(decayRate, cycleFrame));
+      } else {
+        const reverseFrame = totalCycleFrames - cycleFrame;
+        return Math.max(minFrameDuration, baseFrameDuration * Math.pow(decayRate, reverseFrame));
+      }
+    };
+
+    // Get movement magnitude that decreases over frames
+    const getMovementScale = (frameNum) => {
+      const cycleFrame = frameNum % totalCycleFrames;
+      const progress = cycleFrame / totalCycleFrames;
+      // Start with large movements, decay to small movements
+      return 3.0 * Math.exp(-progress * 3);
+    };
+
+    // Collective drift direction that changes over time
+    const getCollectiveDrift = (frameNum) => {
+      const t = frameNum * 0.05;
+      return {
+        x: Math.sin(t * 0.3) * 2,
+        y: Math.cos(t * 0.4) * 1,
+        z: Math.cos(t * 0.3) * 2
+      };
+    };
+
+    let lastTime = performance.now();
+
+    // Animation loop
+    const animate = (currentTime) => {
+      requestAnimationFrame(animate);
+      
+      const deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
+      timeSinceLastFrame += deltaTime;
+
+      const frameDuration = getFrameDuration(currentFrame);
+      
+      if (timeSinceLastFrame >= frameDuration) {
+        timeSinceLastFrame = 0;
+        currentFrame++;
+        
+        const isEvenFrame = currentFrame % 2 === 0;
+        const movementScale = getMovementScale(currentFrame);
+        const collectiveDrift = getCollectiveDrift(currentFrame);
+        const cycleProgress = (currentFrame % totalCycleFrames) / totalCycleFrames;
+        
+        // Update all points
+        points.forEach((point) => {
+          if (isEvenFrame) {
+            // Even frame: collective movement + individual paths
+            const t = currentFrame * 0.1;
+            
+            // Individual oscillating movement
+            const individualX = Math.sin(t * point.individualFreqX + point.individualPhase) * point.individualSpeed;
+            const individualY = Math.cos(t * point.individualFreqY + point.individualPhase) * point.individualSpeed;
+            const individualZ = Math.sin(t * point.individualFreqZ + point.individualPhase * 1.5) * point.individualSpeed;
+            
+            // Combine collective drift + individual movement, scaled by decreasing magnitude
+            const moveX = (collectiveDrift.x + individualX) * movementScale * 0.1;
+            const moveY = (collectiveDrift.y + individualY) * movementScale * 0.1;
+            const moveZ = (collectiveDrift.z + individualZ) * movementScale * 0.1;
+            
+            // Apply movement with boundary constraints to keep on visible grid
+            point.mesh.position.x += moveX;
+            point.mesh.position.y += moveY;
+            point.mesh.position.z += moveZ;
+            
+            // Keep points within visible grid bounds
+            point.mesh.position.x = Math.max(-9, Math.min(9, point.mesh.position.x));
+            point.mesh.position.y = Math.max(0.3, Math.min(8, point.mesh.position.y));
+            point.mesh.position.z = Math.max(-9, Math.min(9, point.mesh.position.z));
+            
+            // As cycle progresses, pull toward cluster targets
+            if (cycleProgress > 0.6) {
+              const clusterPull = (cycleProgress - 0.6) / 0.4;
+              point.mesh.position.x += (point.clusterTarget.x - point.mesh.position.x) * clusterPull * 0.1;
+              point.mesh.position.y += (point.clusterTarget.y - point.mesh.position.y) * clusterPull * 0.1;
+              point.mesh.position.z += (point.clusterTarget.z - point.mesh.position.z) * clusterPull * 0.1;
+              
+              // Keep within bounds
+              point.mesh.position.x = Math.max(-9, Math.min(9, point.mesh.position.x));
+              point.mesh.position.y = Math.max(0.3, Math.min(8, point.mesh.position.y));
+              point.mesh.position.z = Math.max(-9, Math.min(9, point.mesh.position.z));
+            }
+          } else {
+            // Odd frame: random jitter (also scaled down)
+            const jitterScale = movementScale * 0.3;
+            const randomOffsetX = (Math.random() - 0.5) * jitterScale;
+            const randomOffsetY = (Math.random() - 0.5) * jitterScale;
+            const randomOffsetZ = (Math.random() - 0.5) * jitterScale;
+            
+            point.mesh.position.x += randomOffsetX;
+            point.mesh.position.y += randomOffsetY;
+            point.mesh.position.z += randomOffsetZ;
+            
+            // Keep within visible bounds
+            point.mesh.position.x = Math.max(-9, Math.min(9, point.mesh.position.x));
+            point.mesh.position.y = Math.max(0.3, Math.min(8, point.mesh.position.y));
+            point.mesh.position.z = Math.max(-9, Math.min(9, point.mesh.position.z));
+          }
+          
+          // Update projection line
+          const positions = point.line.geometry.attributes.position.array;
+          positions[0] = point.mesh.position.x;
+          positions[1] = point.mesh.position.y;
+          positions[2] = point.mesh.position.z;
+          positions[3] = point.mesh.position.x;
+          positions[4] = 0;
+          positions[5] = point.mesh.position.z;
+          point.line.geometry.attributes.position.needsUpdate = true;
+          
+          // Color variation
+          if (!point.isGold) {
+            const brightness = 0.1 + (point.mesh.position.y / 50);
+            point.mesh.material.color.setRGB(brightness, brightness, brightness);
+          }
+        });
+      }
+
+      renderer.render(scene, camera);
+    };
+
+    animate(performance.now());
+
+    // Handle resize
+    const handleResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousedown', onMouseDown);
+      renderer.domElement.removeEventListener('mousemove', onMouseMove);
+      renderer.domElement.removeEventListener('mouseup', onMouseUp);
+      renderer.domElement.removeEventListener('wheel', onWheel);
+      mountRef.current?.removeChild(renderer.domElement);
+      pointGeometry.dispose();
+      pointMaterial.dispose();
+      renderer.dispose();
+    };
+  }, []);
+
+  return <div ref={mountRef} style={{ width: '100vw', height: '100vh', margin: 0, padding: 0 }} />;
+};
+
+
+
+        ReactDOM.render(<SwirlingPoints />, document.getElementById('root'));
+    </script>
+</body>
+</html>
