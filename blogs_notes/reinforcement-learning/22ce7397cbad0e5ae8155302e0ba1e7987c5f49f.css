@@ -27,6 +27,24 @@
     unicode-range: u+0000-001f, u+0021-00ff, u+0100-017f, u+0180-024f, u+02c6-02dd, u+1e??, u+2000-206f, u+20a0-20cf, u+2100-214f, u+2150-218f, u+22??, u+24c0-24ff, u+fb00-fb4f
     }
 @font-face {
+    font-display: swap;
+    font-family: Noto Sans Arabic;
+    font-stretch: 100%;
+    font-style: normal;
+    font-weight: 100 900;
+    src: url(noto-sans-arabic-593878768b809251b8aea93f1831e86c.woff2);
+    unicode-range: u+06??, u+0750-077f, u+0870-088e, u+0890-0891, u+0897-08e1, u+08e3-08ff, u+200c-200e, u+2010-2011, u+204f, u+2e41, u+fb50-fdff, u+fe70-fe74, u+fe76-fefc, u+102e0-102fb, u+10e60-10e7e, u+10ec2-10ec4, u+10efc-10eff, u+1ee00-1ee03, u+1ee05-1ee1f, u+1ee21-1ee22, u+1ee24, u+1ee27, u+1ee29-1ee32, u+1ee34-1ee37, u+1ee39, u+1ee3b, u+1ee42, u+1ee47, u+1ee49, u+1ee4b, u+1ee4d-1ee4f, u+1ee51-1ee52, u+1ee54, u+1ee57, u+1ee59, u+1ee5b, u+1ee5d, u+1ee5f, u+1ee61-1ee62, u+1ee64, u+1ee67-1ee6a, u+1ee6c-1ee72, u+1ee74-1ee77, u+1ee79-1ee7c, u+1ee7e, u+1ee80-1ee89, u+1ee8b-1ee9b, u+1eea1-1eea3, u+1eea5-1eea9, u+1eeab-1eebb, u+1eef0-1eef1
+    }
+@font-face {
+    font-display: swap;
+    font-family: Noto Sans Hebrew;
+    font-stretch: 100%;
+    font-style: normal;
+    font-weight: 100 900;
+    src: url(noto-sans-hebrew-d6b47ab839699c763b27a6a9bc6bc193.woff2);
+    unicode-range: u+0307-0308, u+0590-05ff, u+200c-2010, u+20aa, u+25cc, u+fb1d-fb4f
+    }
+@font-face {
     font-family: iawriter-mono;
     font-style: normal;
     font-weight: 400;
@@ -230,6 +248,14 @@ table {
 td, th {
     padding: 0
     }
+.notion-light-theme, :root {
+    color-scheme: light
+    }
+@media screen {
+    .notion-dark-theme {
+        color-scheme: dark
+        }
+    }
 .notion-inline-code-container.notion-inline-code-strikethrough > span {
     text-decoration: line-through;
     text-decoration-color: inherit;
@@ -300,6 +326,20 @@ td, th {
     }
 .notion-focusable-within:focus-within {
     box-shadow: inset 0 0 0 1px #2383e2, 0 0 0 1px #2383e2 !important
+    }
+.notion-focusable-token:focus-visible {
+    border-radius: 3px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    outline: none
+    }
+@media (forced-colors: active) {
+    .notion-focusable-token:focus-visible, :focus-visible, [role=button]:focus-visible, a:focus-visible, button:focus-visible {
+        outline-offset: 2px
+        }
+    .notion-focusable-within:focus-within {
+        outline-offset: 1px
+        }
     }
 .notion-cursor-default {
     cursor: default
@@ -381,16 +421,16 @@ html.notion-front-page .notion-app-inner {
     height: auto
     }
 [contenteditable]:empty:after {
-    content: attr(placeholder)
+    content: attr(placeholder)/""
     }
 [contenteditable] .empty-content-editable-selection-target:before {
-    content: attr(placeholder);
+    content: attr(placeholder)/"";
     left: 0;
     position: absolute;
     width: max-content
     }
 .form-question-title .pseudoAfter[contenteditable]:empty:before {
-    content: attr(placeholder)
+    content: attr(placeholder)/""
     }
 #intercom-container {
     z-index: 1000 !important
@@ -462,7 +502,6 @@ html.notion-front-page .notion-app-inner {
     animation-iteration-count: infinite;
     animation-name: dotdance;
     animation-timing-function: cubic-bezier(0.11, 0, 0.5, 0);
-    background-color: #a782c3;
     border-radius: 100%;
     height: 4px;
     width: 4px
@@ -837,85 +876,11 @@ input[type=number].input-hide-arrows {
     }
 .autolayout-col {
     display: flex;
-    flex-direction: column;
-    position: relative
-    }
-.autolayout-col.autolayout-start, .autolayout-col.autolayout-top-left {
-    align-items: flex-start
-    }
-.autolayout-col.autolayout-top-center {
-    align-items: center
-    }
-.autolayout-col.autolayout-end, .autolayout-col.autolayout-top-right {
-    align-items: flex-end
-    }
-.autolayout-col.autolayout-center-left {
-    align-items: flex-start;
-    justify-content: center
-    }
-.autolayout-col.autolayout-center {
-    align-items: center;
-    justify-content: center
-    }
-.autolayout-col.autolayout-center-right {
-    align-items: flex-end;
-    justify-content: center
-    }
-.autolayout-col.autolayout-bottom-left {
-    align-items: flex-start;
-    justify-content: flex-end
-    }
-.autolayout-col.autolayout-bottom-center {
-    align-items: center;
-    justify-content: flex-end
-    }
-.autolayout-col.autolayout-bottom-right {
-    align-items: flex-end;
-    justify-content: flex-end
-    }
-.autolayout-col.autolayout-space {
-    justify-content: space-between
+    flex-direction: column
     }
 .autolayout-row {
     display: flex;
-    flex-direction: row;
-    position: relative
-    }
-.autolayout-row.autolayout-start, .autolayout-row.autolayout-top-left {
-    align-items: flex-start
-    }
-.autolayout-row.autolayout-top-center {
-    align-items: flex-start;
-    justify-content: center
-    }
-.autolayout-row.autolayout-top-right {
-    align-items: flex-start;
-    justify-content: flex-end
-    }
-.autolayout-row.autolayout-center-left {
-    align-items: center
-    }
-.autolayout-row.autolayout-center {
-    align-items: center;
-    justify-content: center
-    }
-.autolayout-row.autolayout-center-right {
-    align-items: center;
-    justify-content: flex-end
-    }
-.autolayout-row.autolayout-bottom-left, .autolayout-row.autolayout-end {
-    align-items: flex-end
-    }
-.autolayout-row.autolayout-bottom-center {
-    align-items: flex-end;
-    justify-content: center
-    }
-.autolayout-row.autolayout-bottom-right {
-    align-items: flex-end;
-    justify-content: flex-end
-    }
-.autolayout-row.autolayout-space {
-    justify-content: space-between
+    flex-direction: row
     }
 .formula-error-underline {
     text-decoration: underline wavy red !important;
@@ -1057,6 +1022,18 @@ input[type=number].input-hide-arrows {
     margin-left: 4px;
     min-width: 16px
     }
+.notion-dark-theme .logo-light-mode {
+    display: none
+    }
+.notion-dark-theme .logo-dark-mode {
+    display: initial
+    }
+.notion-light-theme .logo-dark-mode {
+    display: none
+    }
+.notion-light-theme .logo-light-mode {
+    display: initial
+    }
 html[dir=rtl] .directional-icon {
     transform: scalex(-1)
     }
@@ -1082,7 +1059,7 @@ html[dir=rtl] .directional-icon {
 .agent-title-input::placeholder {
     opacity: 1
     }
-@keyframes ai-face-pulse {
+@keyframes pulse-opacity {
     0% {
         opacity: .3
         } 50% {
@@ -1091,8 +1068,73 @@ html[dir=rtl] .directional-icon {
         opacity: .3
         }
     }
-.ai-face-pulse {
-    animation: ai-face-pulse 2s cubic-bezier(0.45, 0, 0.55, 1) infinite
+.pulse-opacity {
+    animation: pulse-opacity 1.8s linear infinite
+    }
+.video-hide-default-controls::-webkit-media-controls, .video-hide-default-controls::-webkit-media-controls-enclosure {
+    display: none !important
+    }
+.video-hide-default-controls::-webkit-media-controls-overlay-play-button {
+    display: none !important
+    }
+.video-progress-shimmer {
+    overflow: hidden;
+    position: relative;
+    z-index: 0
+    }
+.video-progress-shimmer:before {
+    animation: shimmer 1s linear infinite;
+    content: "";
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    z-index: 1
+    }
+@media print {
+    .notion-ai-button {
+        display: none !important
+        }
+    }
+@layer priority1, priority2;
+@layer priority1 {
+    . x1ua5tub {
+        -webkit-box-orient: vertical
+        } . x104kibb {
+        display: -webkit-box
+        } . x78zum5 {
+        display: flex
+        } . x3nfvp2 {
+        display: inline-flex
+        } . x3ieub6 {
+        flex-direction: column-reverse
+        } . xdt5ytf {
+        flex-direction: column
+        } . x15zctf7 {
+        flex-direction: row-reverse
+        } . x1q0g3np {
+        flex-direction: row
+        } . x1iyjqo2 {
+        flex-grow: 1
+        } . x14z9mp {
+        margin-inline-end: 0
+        } . x1lziwak {
+        margin-inline-start: 0
+        } . xlyipyv {
+        text-overflow: ellipsis
+        } . xuxw1ft {
+        white-space: nowrap
+        }
+    }
+@layer priority2 {
+    . xat24cr {
+        margin-bottom: 0
+        } . xdj266r {
+        margin-top: 0
+        } . x6ikm8r {
+        overflow-x: hidden
+        } . x10wlt62 {
+        overflow-y: hidden
+        }
     }
 .layout {
     display: grid;
@@ -1164,6 +1206,21 @@ body.dark .layout-content-with-divider {
     opacity: 0;
     transition: opacity 0.1s ease-out;
     width: 6px
+    }
+.nds-shimmer-text {
+    animation: nds-shimmer-text 1.5s linear infinite;
+    background-clip: text;
+    -webkit-background-clip: text;
+    background-repeat: repeat;
+    background-size: 200% 100%;
+    user-select: none
+    }
+@keyframes nds-shimmer-text {
+    0% {
+        background-position: 200% 50%
+        } to {
+        background-position: 0 50%
+        }
     }
 /*!
  * https://github.com/arqex/react-datetime
@@ -1498,6 +1555,17 @@ fieldset {
 .notion-pulse-b {
     animation: pulse-b 1.2s ease-in-out 1
     }
+@keyframes property-update-flash {
+    0% {
+        animation-timing-function: ease-in;
+        opacity: 0
+        } 14.285% {
+        animation-timing-function: ease-out;
+        opacity: 1
+        } to {
+        opacity: 0
+        }
+    }
 .front-fadein-slow {
     animation: fadein 0.5s ease-in
     }
@@ -1594,6 +1662,9 @@ fieldset {
     }
 .notion-light-theme .token.entity {
     cursor: help
+    }
+.notion-light-theme .token.operator {
+    background: none
     }
 .notion-dark-theme code[class*=language-], .notion-dark-theme pre[class*=language-] {
     word-wrap: normal;
