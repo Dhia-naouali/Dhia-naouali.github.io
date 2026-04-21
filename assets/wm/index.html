@@ -3,29 +3,75 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>WM</title>
+<title>WM: world model · training + open‑loop planning</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f5f4f0;--surface:#ffffff;--border:rgba(0,0,0,.08);
-  --text:#1a1a18;--muted:#88887e;--red:#c82020;
-  --btn:#ffffff;--btnh:#eeebe4;--gc:rgba(0,0,0,.038)
+  --bg:#f5f4f0;          /* originally light canvas background */
+  --surface:#ffffff;     /* originally body background (card-like) */
+  --border:rgba(0,0,0,.08);
+  --text:#1a1a18;
+  --muted:#88887e;
+  --red:#c82020;
+  --btn:#ffffff;
+  --btnh:#eeebe4;
+  --gc:rgba(0,0,0,.038);
 }
-@media(prefers-color-scheme:dark){:root{
-  --bg:#131311;--surface:#1c1c19;--border:rgba(255,255,255,.08);
-  --text:#e6e4dc;--muted:#666860;--red:#e03333;
-  --btn:#242420;--btnh:#2c2c28;--gc:rgba(255,255,255,.03)
-}}
-body{background:var(--bg);font-family:-apple-system,"Helvetica Neue",Arial,sans-serif;
-  color:var(--text);display:flex;justify-content:center;padding:24px 16px 32px}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#131311;
+    --surface:#1c1c19;
+    --border:rgba(255,255,255,.08);
+    --text:#e6e4dc;
+    --muted:#666860;
+    --red:#e03333;
+    --btn:#242420;
+    --btnh:#2c2c28;
+    --gc:rgba(255,255,255,.03);
+  }
+}
+/* SWAPPED: body gets the "scene box" color, canvas gets the former background */
+body{
+  background:var(--surface);
+  font-family:-apple-system,"Helvetica Neue",Arial,sans-serif;
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  padding:24px 16px 32px;
+}
 .wrap{width:100%;max-width:960px}
-canvas{width:100%;display:block;border-radius:12px;
-  border:.5px solid var(--border);background:var(--surface)}
-.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:11px}
-.sep{width:.5px;height:20px;background:var(--border);margin:0 3px}
-button{padding:5px 15px;font-size:12px;border:.5px solid var(--border);
-  border-radius:20px;background:var(--btn);color:var(--text);cursor:pointer;
-  font-family:inherit;transition:background .1s;outline:none}
+canvas{
+  width:100%;
+  display:block;
+  border-radius:12px;
+  border:.5px solid var(--border);
+  background:var(--bg);      /* swapped: now uses the original bg color */
+}
+.ctrl{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  margin-top:11px;
+}
+.sep{
+  width:.5px;
+  height:20px;
+  background:var(--border);
+  margin:0 3px;
+}
+button{
+  padding:5px 15px;
+  font-size:12px;
+  border:.5px solid var(--border);
+  border-radius:20px;
+  background:var(--btn);
+  color:var(--text);
+  cursor:pointer;
+  font-family:inherit;
+  transition:background .1s;
+  outline:none;
+}
 button:hover{background:var(--btnh)}
 button.on{background:var(--red);color:#fff;border-color:var(--red)}
 </style>
@@ -38,7 +84,8 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     <button id="bStep">Step &rarr;</button>
     <div class="sep"></div>
     <button class="mBtn on" data-m="training">Training</button>
-    <button class="mBtn" data-m="dreaming">Dreaming</button>
+    <!-- renamed "Dreaming" → "open‑loop planning" -->
+    <button class="mBtn" data-m="open">open‑loop planning</button>
   </div>
 </div>
 <script>
@@ -51,7 +98,8 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
   var ROW_ACT=62, ROW_VIT=152, ROW_FEAT=315, ROW_FRAME=430;
   var VW=136,VH=68, FW=106,FH=76, ZW=92,ZH=44, APW=88,APH=26;
 
-  var mode='training', step=0, phase='encode', anim=0, mpcTime=0;
+  var mode='training';      // 'training' or 'open' (open‑loop planning)
+  var step=0, phase='encode', anim=0, mpcTime=0;
   var playing=false, lastTs=null, raf=null;
 
   /* which columns have committed real (blue) / pred (amber) features */
@@ -194,7 +242,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     lbl('Encoder',cx,ROW_FRAME,13,'#fff',500);
   }
 
-  /* ghost enc for dreaming (shows where frames were) */
+  /* ghost enc for open‑loop (shows where frames were) */
   function drawEncoderGhost(cx){
     var x=cx-FW/2,y=ROW_FRAME-FH/2;
     ct.globalAlpha=.13;rr(x,y,FW,FH,8,'#2e2e2c');
@@ -290,12 +338,12 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     ct.clearRect(0,0,W,H);
     drawBG();
 
-    var isD=mode==='dreaming';
+    var isOpen = (mode === 'open');   // open‑loop planning (formerly "dreaming")
     var A=eio(Math.min(1,anim));
     var red=css('--red');
     var vx=vitX();
 
-    if(isD){
+    if(isOpen){
       var mpcA=phase==='mpc'?A:phase==='attend'?(1-A)*.45:0;
       drawMPC(mpcA,mpcTime,vx);
     }
@@ -307,7 +355,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
       if(c===fillingReal) rA=A;
       if(c===fillingPred) pA=A;
       /* training: once real arrives at a column, pred fades out */
-      if(!isD){
+      if(!isOpen){
         if(realDone[c]) pA=0;
         if(c===fillingReal && predDone[c]) pA=1-A;
       }
@@ -317,7 +365,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     var gA=goalDone?1:(fillingGoal?A:0);
     if(gA>.01) featGrid(GOAL_X,ROW_FEAT,false,8,gA,'z_goal');
 
-    if(!isD){
+    if(!isOpen){
       for(var c2=0;c2<COLS.length;c2++){
         var isFilling=c2===fillingReal;
         if(!isFilling)continue;
@@ -329,7 +377,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     var showFan=phase==='attend'||phase==='predict';
     if(showFan){
       var fanA=phase==='attend'?A:1;
-      if(!isD){
+      if(!isOpen){
         /* training: all real features → ViT */
         for(var fc=0;fc<COLS.length;fc++){
           if(!realDone[fc]&&fc!==fillingReal)continue;
@@ -339,7 +387,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
           curveArrow(COLS[fc],srcY, vx,ROW_VIT+VH/2, '#4088c8',fanA*dim,.75);
         }
       } else {
-      /* dreaming: z_0 (blue) + all pred feats → ViT — no goal arrow */
+        /* open‑loop: z_0 (blue) + all pred feats → ViT — no goal arrow */
         if(realDone[0])
           curveArrow(COLS[0],ROW_FEAT-ZH/2, vx,ROW_VIT+VH/2, '#4088c8',fanA*.8,.75);
         for(var dc=1;dc<step;dc++){
@@ -351,31 +399,30 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     }
 
     if(phase==='predict'){
-      if(isD){
-        /* dreaming: ViT deposits ẑ_t straight down */
+      if(isOpen){
+        /* open‑loop: ViT deposits ẑ_t straight down */
         arw(vx, ROW_VIT+VH/2+2, vx, ROW_FEAT-ZH/2-2, red, A, 1.2);
       } else {
-        /* training: predict lands at NEXT column — arc rightward, head pointing right */
+        /* training: predict lands at NEXT column — arc rightward */
         var outX=step<COLS.length-1?COLS[step+1]:GOAL_X;
-        var destY=ROW_FEAT;           /* vertical centre of feature grid */
-        var destX=outX-ZW/2-3;        /* left edge of feature grid */
+        var destY=ROW_FEAT;
+        var destX=outX-ZW/2-3;
         var sx=vx+VW/2, sy=ROW_VIT;
         ct.save();ct.globalAlpha=A;ct.strokeStyle=red;ct.lineWidth=1.2;ct.lineCap='round';
         ct.beginPath();ct.moveTo(sx,sy);
         ct.bezierCurveTo(outX,sy, destX-40,destY, destX-10,destY);
         ct.stroke();
         ct.fillStyle=red;
-        /* arrowhead pointing RIGHT — tip at destX */
         ct.beginPath();ct.moveTo(destX,destY);
         ct.lineTo(destX-11,destY-5);ct.lineTo(destX-11,destY+5);
         ct.closePath();ct.fill();ct.restore();
       }
     }
 
-    var isMPC=isD;
+    var isMPC=isOpen;
     arw(vx,ROW_ACT+APH/2+2, vx,ROW_VIT-VH/2-2, isMPC?red:'#585852', .75,.9);
 
-    if(!isD){
+    if(!isOpen){
       var encGlow=phase==='encode'?(0.5+0.5*Math.sin(anim*Math.PI*4))*eio(Math.min(1,anim*2.5)):0;
       drawEncoder(vx,encGlow);
     } else {
@@ -384,9 +431,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     }
 
     drawViT(vx, phase==='predict'?A:0);
-
     drawAction(vx,isMPC,step);
-
     drawDividers();
 
     /* timestep labels */
@@ -395,13 +440,14 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
         ct.globalAlpha=.38;lbl('t='+cl,COLS[cl],H-14,9);ct.globalAlpha=1;
       }
     }
-    if(isD){
+    if(isOpen){
       ct.globalAlpha=.38;lbl('t=0',COLS[0],H-14,9);lbl('goal',GOAL_X,H-14,9);ct.globalAlpha=1;
     }
 
-    /* mode badge */
+    /* mode badge: renamed "dreaming" → "open‑loop planning" */
     ct.globalAlpha=.82;
-    lbl(isD?'dreaming':'training',W-56,22,11,isD?red:'#4088c8',500);
+    var badgeText = isOpen ? 'open‑loop planning' : 'training';
+    lbl(badgeText, W-56, 22, 11, isOpen ? red : '#4088c8', 500);
     ct.globalAlpha=1;
   }
 
@@ -411,17 +457,16 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     if(fillingGoal){goalDone=true;fillingGoal=false;}
   }
 
-  function isD(){return mode==='dreaming';}
+  function isOpenLoop(){ return mode === 'open'; }
 
   function nextPhase(){
     commit();
-    if(!isD()){
+    if(!isOpenLoop()){
       /* training sequence per step: encode → attend → predict → slide */
       if(phase==='encode'){
         phase='attend';
       } else if(phase==='attend'){
         phase='predict';
-        /* amber feature appears at next col */
         fillingPred=step+1<COLS.length?step+1:step;
       } else if(phase==='predict'){
         phase='slide';
@@ -431,7 +476,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
         else phase='reset';
       }
     } else {
-      /* dreaming sequence: mpc → (attend → predict → slide_d) × N */
+      /* open‑loop planning: mpc → (attend → predict → slide_d) × N */
       if(phase==='mpc'){
         phase='attend';
       } else if(phase==='attend'){
@@ -450,7 +495,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
 
   function resetState(){
     commit();
-    if(!isD()){
+    if(!isOpenLoop()){
       step=0; phase='encode'; anim=0; mpcTime=0;
       realDone=[]; predDone=[]; goalDone=false;
       fillingReal=0; fillingPred=-1; fillingGoal=false;
@@ -458,7 +503,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
       step=1; phase='mpc'; anim=0; mpcTime=0;
       realDone=[]; predDone=[]; goalDone=false;
       fillingReal=-1; fillingPred=-1; fillingGoal=false;
-      /* dreaming starts with z_0 and z_goal already known — commit immediately */
+      /* open‑loop starts with z_0 and z_goal already known */
       realDone[0]=true; goalDone=true;
     }
   }
@@ -496,9 +541,9 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     btn.addEventListener('click',function(){
       pause();
       document.getElementById('bPlay').textContent='\u25B6 Play';
-      mode=this.dataset.m;
+      mode = this.dataset.m;   // 'training' or 'open'
       document.querySelectorAll('.mBtn').forEach(function(b){b.classList.toggle('on',b===btn);});
-      resetState();render();
+      resetState(); render();
     });
   });
 
