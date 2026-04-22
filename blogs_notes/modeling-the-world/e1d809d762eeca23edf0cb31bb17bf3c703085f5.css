@@ -17,6 +17,13 @@ div[role="button"]:not(.notion-record-icon):hover {
 .notion-frame {
   max-width: 100%;
   width: 100vw !important;
+  height: auto !important;
+  min-height: calc(100vh - 44px) !important;
+}
+
+.notion-scroller.vertical {
+  overflow-y: auto !important;
+  height: auto !important;
 }
 
 .notion-selectable {
