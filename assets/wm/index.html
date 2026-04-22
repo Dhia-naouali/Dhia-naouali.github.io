@@ -200,22 +200,29 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     ct.restore();
   }
 
-  function featGrid(cx,cy,warm,idx,a,tag){
+  function featGrid(cx,cy,warm,idx,a,tag,goalRed){
     if(a<.01)return;
     var cw=ZW/8,ch=ZH/4,x0=cx-ZW/2,y0=cy-ZH/2,data=FD[idx%10];
     ct.globalAlpha=a;
     for(var i=0;i<data.length;i++){
       var v=data[i],c=i%8,r=Math.floor(i/8);
-      ct.fillStyle=warm
-        ?'hsl('+(14+v*40)+','+(50+v*42)+'%,'+(16+v*50)+'%)'
-        :'hsl('+(192+v*32)+','+(44+v*44)+'%,'+(16+v*50)+'%)';
+      if(goalRed){
+        /* goal latent in open-loop: red */
+        ct.fillStyle='hsl('+(6+v*22)+','+(55+v*38)+'%,'+(14+v*46)+'%)';
+      } else if(warm){
+        /* predicted (ẑ): original amber/orange hues, lighter range */
+        ct.fillStyle='hsl('+(14+v*40)+','+(50+v*36)+'%,'+(42+v*42)+'%)';
+      } else {
+        /* real (z): light muted blue */
+        ct.fillStyle='hsl('+(205+v*15)+','+(18+v*24)+'%,'+(50+v*36)+'%)';
+      }
       ct.fillRect(x0+c*cw+.5,y0+r*ch+.5,cw-1.5,ch-1.5);
     }
-    ct.strokeStyle=warm?'rgba(185,55,30,.42)':'rgba(40,120,205,.38)';
+    ct.strokeStyle=goalRed?'rgba(185,55,30,.42)':warm?'rgba(185,120,40,.42)':'rgba(90,145,205,.38)';
     ct.lineWidth=.6;ct.strokeRect(x0,y0,ZW,ZH);
-    ct.globalAlpha=a*.65;
-    ct.font='400 10px -apple-system,sans-serif';
-    ct.fillStyle=warm?css('--red'):'#4088c8';
+    ct.globalAlpha=a*.85;
+    ct.font='500 12px -apple-system,sans-serif';
+    ct.fillStyle=css('--text');
     ct.textAlign='center';ct.textBaseline='middle';
     var labelTxt=tag!=null?tag:((warm?'\u1e91':'z')+idx);
     ct.fillText(labelTxt, cx, cy+ZH/2+11);
@@ -270,7 +277,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     if(isMPC) lbl('\u2190 MPC',vx+APW/2+36,ROW_ACT,10,red);
     ct.globalAlpha=.65;
     ct.font='400 10px -apple-system,sans-serif';
-    ct.fillStyle=isMPC?red:'#4088c8';
+    ct.fillStyle=isMPC?red:css('--muted');
     ct.textAlign='center';ct.textBaseline='middle';
     ct.globalAlpha=1;
   }
@@ -363,14 +370,14 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     }
     /* goal feat */
     var gA=goalDone?1:(fillingGoal?A:0);
-    if(gA>.01) featGrid(GOAL_X,ROW_FEAT,false,8,gA,'z_goal');
+    if(gA>.01) featGrid(GOAL_X,ROW_FEAT,isOpen,8,gA,'z_goal',false);
 
     if(!isOpen){
       for(var c2=0;c2<COLS.length;c2++){
         var isFilling=c2===fillingReal;
         if(!isFilling)continue;
         var ea=(phase==='encode')?A:0;
-        if(ea>.01) arw(COLS[c2],ROW_FRAME-FH/2-2, COLS[c2],ROW_FEAT+ZH/2+4, '#4088c8',ea,.85);
+        if(ea>.01) arw(COLS[c2],ROW_FRAME-FH/2-2, COLS[c2],ROW_FEAT+ZH/2+4, '#7aaed4',ea,.85);
       }
     }
 
@@ -384,12 +391,12 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
           var dim=Math.max(.22,1-(step-fc)*.09);
           var hasPred=predDone[fc];
           var srcY=ROW_FEAT+(hasPred?+6:0)-ZH/2;
-          curveArrow(COLS[fc],srcY, vx,ROW_VIT+VH/2, '#4088c8',fanA*dim,.75);
+          curveArrow(COLS[fc],srcY, vx,ROW_VIT+VH/2, '#7aaed4',fanA*dim,.75);
         }
       } else {
         /* open‑loop: z_0 (blue) + all pred feats → ViT — no goal arrow */
         if(realDone[0])
-          curveArrow(COLS[0],ROW_FEAT-ZH/2, vx,ROW_VIT+VH/2, '#4088c8',fanA*.8,.75);
+          curveArrow(COLS[0],ROW_FEAT-ZH/2, vx,ROW_VIT+VH/2, '#7aaed4',fanA*.8,.75);
         for(var dc=1;dc<step;dc++){
           if(!predDone[dc])continue;
           var ddim=Math.max(.22,1-(step-1-dc)*.11);
@@ -447,7 +454,7 @@ button.on{background:var(--red);color:#fff;border-color:var(--red)}
     /* mode badge: renamed "dreaming" → "open‑loop planning" */
     ct.globalAlpha=.82;
     var badgeText = isOpen ? 'open‑loop planning' : 'training';
-    lbl(badgeText, W-56, 22, 11, isOpen ? red : '#4088c8', 500);
+    lbl(badgeText, W-56, 22, 11, isOpen ? red : '#7aaed4', 500);
     ct.globalAlpha=1;
   }
 
