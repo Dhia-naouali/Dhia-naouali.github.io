@@ -1,0 +1,30 @@
+/* Fix scroll issue for Loconotion rendered pages */
+html, body {
+    overflow-y: auto !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+.notion-body {
+    overflow-y: auto !important;
+    height: auto !important;
+}
+
+.notion-app-inner {
+    height: auto !important;
+    max-height: none !important;
+}
+
+.notion-cursor-listener,
+.notion-frame,
+.notion-scroller.vertical,
+[class*="notion-app"] {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+#notion-app {
+    overflow-y: auto !important;
+    height: auto !important;
+}

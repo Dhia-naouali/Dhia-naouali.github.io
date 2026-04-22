@@ -1,0 +1,8 @@
+:root, .notion-light-theme {
+    color-scheme: light
+    }
+@media screen {
+    .notion-dark-theme {
+        color-scheme: dark
+        }
+    }
