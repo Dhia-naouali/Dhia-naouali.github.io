@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Residual Point Transport</title>
+<style>
+  *{box-sizing:border-box}
+  :root{--ink:#292929;--muted:#85857f;--line:#c6c6c0;--grid:#e5e5df;--red:#d8362a;--blue:#2266c4;--paper:#fff;--panel:#fafaf8}
+  html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Courier New",monospace}
+  body{padding:16px;overflow:auto}
+  #topBar{position:sticky;left:0;top:0;z-index:20;display:flex;justify-content:space-between;padding:0 0 12px;background:#fff;font-size:11px;color:var(--muted)}
+  #topBar .title{color:var(--ink);letter-spacing:.12em}
+  #viewport{overflow:auto;padding:4px 4px 20px}
+  #pipeline{position:relative;display:grid;grid-template-rows:270px 250px;grid-auto-columns:max-content;column-gap:0;row-gap:55px;align-items:center;width:max-content;min-width:100%}
+  .space-panel{position:relative;width:300px;height:250px;border:1px solid var(--line);background:#fff;z-index:3}
+  .space-panel canvas{display:block;width:100%;height:100%}
+  .space-label{position:absolute;left:9px;top:8px;z-index:2;color:var(--muted);font-size:10px;letter-spacing:.05em;pointer-events:none}
+  .space-meta{position:absolute;right:8px;bottom:7px;color:#aaa;font-size:9px;pointer-events:none}
+  .layer-box,.train-box{width:220px;border:1px solid var(--ink);background:var(--panel);padding:13px 15px;z-index:4}
+  .layer-title{display:flex;justify-content:space-between;margin-bottom:10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+  .formula{color:var(--muted);font-size:9px;letter-spacing:0;text-transform:none}
+  .ctrl-row{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .ctrl-row>label{width:18px;color:var(--muted);font-size:10px}
+  .matrix-input{display:grid;grid-template-columns:45px 45px;gap:4px}
+  .bias-input,.act-group,.button-row{display:flex;gap:4px;flex-wrap:wrap}
+  input,button{height:25px;border:1px solid var(--line);background:#fff;color:var(--ink);font:10px "Courier New",monospace;padding:3px 6px;outline:none}
+  input{width:45px;text-align:center}
+  input.c0{color:var(--red)}input.c1{color:var(--blue)}
+  input:focus,button:hover{border-color:var(--ink)}
+  button{cursor:pointer}
+  .act-group button.active{border-color:var(--red);color:var(--red);background:#d8362a10}
+  .flow-arrow{width:34px;text-align:center;color:#aaa;font-size:18px;z-index:1}
+  .flow-svg{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:2}
+  .flow-path{fill:none;stroke:#aaa;stroke-width:1}
+  .skip-path{stroke-dasharray:5 5}
+  .sum{width:38px;height:38px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;font-size:19px;z-index:4}
+  .residual-wrap{position:relative;width:300px;height:250px}
+  .residual-link{position:absolute;right:-82px;top:-67px;color:#aaa;font-size:38px;transform:rotate(-20deg);z-index:1}
+  .target-panel{border-color:var(--blue)}
+  .target-panel::before{content:"target";position:absolute;right:8px;top:7px;color:var(--blue);font-size:9px}
+  .target-arrow{position:absolute;top:-48px;left:50%;color:#aaa;font-size:25px}
+  .point-loss-panel{width:600px;height:500px;align-self:center}
+  .train-box{width:230px;align-self:center}
+  .train-box .loss{margin:12px 0;padding:10px;border:1px solid var(--line);background:#fff}
+  .train-box .loss span{display:block;color:var(--muted);font-size:9px;margin-bottom:3px}
+  #lossValue{font-size:18px;font-weight:normal}
+  #stepValue{color:var(--muted);font-size:9px}
+  .train-box input{width:78px}
+  .train-box input[type="checkbox"]{width:auto;height:auto}
+  .train-box button{flex:1;min-width:55px}
+  #play{border-color:var(--red);color:var(--red)}
+  button:disabled{cursor:default;color:#bbb;border-color:#ddd}
+  #lossCanvas{width:100%;height:68px;display:block;border:1px solid var(--grid);background:#fff;margin-top:9px}
+</style>
+</head>
+<body>
+<div id="topBar">
+  <span class="title">RESIDUAL POINT TRANSPORT</span>
+  <span id="status">paused · paired coordinate MSE</span>
+</div>
+<div id="viewport"><main id="pipeline"></main></div>
+
+<script>
+'use strict';
+const LAYER_COUNT=3,BATCH_SIZE=32,STEPS_PER_FRAME=4;
+let samples=[],layers=[],running=false,stepCount=0,lossHistory=[],raf=0,rngState=0x51f15e;
+
+function random(){rngState|=0;rngState=(rngState+0x6D2B79F5)|0;let t=rngState;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}
+function normal(){const u=Math.max(random(),1e-9);return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*random())}
+const REFERENCE_GROUPS=[
+  {color:'#f28c00',marker:'circle',
+    input:'1.88,2.76;1.98,2.9;2,3.1;2,3.3;2.24,3.04;2.24,3.23;2.47,2.96;2.46,3.16;2.69,3.26;2.69,3.06;2.92,3.19;2.66,2.86;2.93,3;3.86,2.58;2.99,2.68;3.17,2.63;3.39,2.55;2.79,2.66;2.56,2.72;3,2.48;3.2,2.18;2.8,2.47;2.78,2.27;2.57,2.53;2.34,2.43;2.34,2.62;2.12,2.51;1.85,2.37;1.65,2.47;1.88,2.57;1.4,2.48;2.11,2.7',
+    target:'-1.74,0.77;-1.62,1;-1.58,1.2;-1.62,1.44;-1.58,1.64;-1.45,1.3;-1.38,1.49;-1.34,1.68;-1.37,1.08;-1.4,0.89;-1.13,1.57;-1.16,1.38;-1.18,1.05;-1.21,0.87;-1.02,0.97;-0.36,0.77;-0.53,0.51;-0.89,0.53;-0.35,0.31;-0.59,0.27;-0.37,0.13;-0.61,0.08;-0.82,0.21;-1.02,0.09;-1.21,0.38;-1.25,0.16;-1.48,0.28;-1.68,0.14;-1.91,0.21;-1.54,0.63;-1.96,0.54;-2.2,0.49;-2.42,0.46;-2.59,0.53;-2.4,0.63;-1.98,0.71;-2.86,0.69;-2.61,0.73'},
+  {color:'#ef4444',marker:'cross',
+    input:'1.89,1.52;1.7,1.73;1.32,2.91;1.4,3.13;2.08,1.94;2.45,1.75;2.93,1.88;3.1,1.69;3,1.24;2.85,0.79;2.17,0.94;2.02,0.55;1.77,0.54;1.52,0.51',
+    target:'0.41,1.13;0.29,1.36;0.34,1.77;0.45,1.55;0.54,1.32;0.79,1.28;0.66,1.09;0.91,1.06;0.78,0.82;0.65,0.63;0.64,0.23;0.53,0.85;0.34,0.17;0.4,0.67'},
+  {color:'#89939d',marker:'cross',
+    input:'1.05,3.56;1,3.99;1.3,3.59;1.17,3.79;1.47,3.39;1.56,3.6;1.73,3.41;3.31,1.48;3.5,1.26;3.68,1.02;3.07,1.44;3.24,1.24;3.43,0.99;3.6,0.8;3.34,0.79;3.17,0.98;3.1,0.79;2.76,0.59;2.51,0.59;2.34,0.75',
+    target:'0.63,-1.2;0.52,-0.91;0.4,-0.68;0.37,-0.25;0.76,-0.96;0.88,-0.75;0.9,-0.35;1.18,-0.6;1.43,-0.64;1.13,-1.27;1.27,-1.43;1.55,-1.65;1.29,-1.63;1.18,-1.8;0.95,-1.75;0.82,-1.94;0.57,-1.9;0.75,-1.42;0.33,-1.85;0.45,-1.68;0.27,-1.31'},
+  {color:'#292929',marker:'circle',
+    input:'0.78,1.93;0.54,1.99;0.47,2.18;0.24,2.28;0.71,2.13;1.23,1.95;0.27,2.48;0.47,2.38;0.7,2.32;0.49,2.58;0.93,2.24;0.49,2.78;1.16,2.14;0.96,2.44;0.95,2.63;1.15,2.34;0.82,3.17;0.81,3.36;1.03,2.88;1.19,2.54;1.18,2.73;1.41,2.68;1.39,2.08;1.64,2.66;1.62,2.27;2.09,2.31;1.86,2.18;2.54,2.33;2.09,2.11;2.54,2.13;2.32,2.03;2.78,2.07;2.59,1.53;2.61,1.34;2.36,1.43;2.64,1.07;2.14,1.33;2.42,0.97;1.97,1.3;1.68,1.48;1.99,1.03;1.48,1.7;1.69,1.28;1.79,0.98;1.8,0.79;1.44,1.49;1.57,0.85;1.45,1.3;1.34,0.75;1.33,0.94;1.12,0.83;1.11,1.03;1.2,1.56;0.99,1.26;0.98,1.46;0.76,1.34;1.01,1.66;0.75,1.53;0.55,1.8;1,1.85',
+    target:'-2.36,-0.44;-1.85,-0.48;-2.38,-0.28;-2.06,-0.32;-2.05,-0.14;-1.85,-0.22;-1.64,-0.34;-2.02,0.08;-1.84,-0.04;-1.91,0.21;-1.68,0.14;-1.41,-0.41;-1.48,0.28;-1.25,0.15;-1.01,0.08;-0.82,0.19;-1.19,-0.31;-0.59,0.26;-0.38,0.31;-0.61,0.06;-0.88,-0.21;-0.38,0.09;-0.95,-0.35;-0.45,-0.28;-0.72,-0.44;-0.44,-0.41;-0.56,-0.49;-0.99,-0.55;-0.76,-0.61;-0.44,-0.71;-0.64,-0.71;-0.86,-0.66;-0.36,-0.81;-0.45,-0.99;-0.81,-0.84;-0.68,-0.91;-1.09,-0.74;-0.96,-0.86;-0.65,-1.39;-0.91,-1.09;-1.31,-0.64;-1.14,-1.02;-1.26,-0.79;-1.35,-1.05;-1.49,-0.81;-1.66,-1.08;-1.91,-1.16;-1.85,-0.96;-2.12,-1.06;-1.95,-0.89;-2.08,-0.89;-2.58,-1.09;-2.35,-0.96;-2.19,-0.88;-2.54,-0.89;-1.89,-0.66;-2.16,-0.68;-2.54,-0.68;-1.66,-0.55;-2.11,-0.56'}
+];
+function parsePoints(text){return text.split(';').map(pair=>pair.split(',').map(Number))}
+function matchingFunction(x,y){
+  // Center the reference sketch, then apply a smooth, genuinely paired warp.
+  // Every target is determined only by its corresponding input coordinates.
+  const u=x-1.9,v=y-2.15;
+  return[
+    .78*u+.26*Math.sin(1.05*v)+.035*u*v,
+    .76*v+.23*Math.sin(.95*u)-.025*(u*u-v*v)
+  ];
+}
+function makeSamples(){
+  return REFERENCE_GROUPS.flatMap(group=>{
+    const inputs=parsePoints(group.input);
+    return inputs.map(input=>({
+      input,target:matchingFunction(input[0],input[1]),color:group.color,marker:group.marker
+    }));
+  });
+}
+function activate(x,name){
+  if(name==='relu')return Math.max(0,x);
+  if(name==='sigmoid')return 1/(1+Math.exp(-Math.max(-30,Math.min(30,x))));
+  if(name==='gelu')return .5*x*(1+erf(x/Math.SQRT2));
+  return x;
+}
+function derivative(x,name){
+  if(name==='relu')return x>0?1:0;
+  if(name==='sigmoid'){const s=activate(x,name);return s*(1-s)}
+  if(name==='gelu')return .5*(1+erf(x/Math.SQRT2))+x*Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+  return 1;
+}
+function erf(x){const sign=x<0?-1:1,a=Math.abs(x),t=1/(1+.3275911*a);const p=((((1.061405429*t-1.453152027)*t+1.421413741)*t-.284496736)*t+.254829592)*t;return sign*(1-p*Math.exp(-a*a))}
+function newLayers(){return Array.from({length:LAYER_COUNT},()=>({
+  w:[[normal()*.16,normal()*.16],[normal()*.16,normal()*.16]],b:[0,0],
+  gamma:[1,1],beta:[0,0],act:'linear',
+  adam:{mw:[[0,0],[0,0]],vw:[[0,0],[0,0]],mb:[0,0],vb:[0,0],mg:[0,0],vg:[0,0],mt:[0,0],vt:[0,0]}
+}))}
+function resetOptimizer(){
+  layers.forEach(layer=>{layer.adam={mw:[[0,0],[0,0]],vw:[[0,0],[0,0]],mb:[0,0],vb:[0,0],mg:[0,0],vg:[0,0],mt:[0,0],vt:[0,0]}});
+}
+function layerNormEnabled(){const toggle=document.getElementById('useLayerNorm');return toggle?toggle.checked:false}
+
+const AXIS_TARGETS=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+function axisAngle(a,b){const la=Math.hypot(a.x,a.y)||1,lb=Math.hypot(b.x,b.y)||1;return Math.acos(Math.max(-1,Math.min(1,(a.x*b.x+a.y*b.y)/(la*lb))))}
+function axisTargets(w0,w1){
+  let best,cost=Infinity;
+  AXIS_TARGETS.forEach(a=>AXIS_TARGETS.forEach(b=>{if((a.x!==0)===(b.x!==0))return;const next=axisAngle(w0,a)+axisAngle(w1,b);if(next<cost){cost=next;best=[a,b]}}));
+  return best;
+}
+function inverseActivation(t,name){
+  if(name==='relu')return t<0?null:t;
+  if(name==='sigmoid')return t<=0||t>=1?null:Math.log(t/(1-t));
+  if(name==='gelu'){
+    if(t<-.1699)return null;let z=t>0?t:-.5;
+    for(let i=0;i<16;i++){const f=activate(z,'gelu')-t,d=derivative(z,'gelu');if(Math.abs(d)<1e-10)break;z-=f/d}
+    return z;
+  }
+  return t;
+}
+function axisTicks(name,max){
+  if(name==='sigmoid')return [0.01,0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95,0.99];
+  const lo=name==='relu'||name==='gelu'?0:-Math.ceil(max);
+  return Array.from({length:Math.ceil(max)-lo+1},(_,i)=>lo+i);
+}
+function activationAxisCoord(t,name,bias){
+  const z=inverseActivation(t,name);
+  return z===null?null:z-bias;
+}
+function formatActivationTick(t,name){
+  if(name==='sigmoid')return (t<0.1||t>0.9)?t.toFixed(2):t.toFixed(1);
+  return Number.isInteger(t)?String(t):t.toFixed(1);
+}
+
+function forward(input,cache=false){
+  let h=[input[0],input[1]],states=[h],residuals=[],caches=[];
+  const useLayerNorm=layerNormEnabled();
+  for(const layer of layers){
+    const z=[h[0]*layer.w[0][0]+h[1]*layer.w[1][0]+layer.b[0],h[0]*layer.w[0][1]+h[1]*layer.w[1][1]+layer.b[1]];
+    let normalized=null,invStd=1,u=z;
+    if(useLayerNorm){
+      const mean=(z[0]+z[1])/2,variance=((z[0]-mean)**2+(z[1]-mean)**2)/2;
+      invStd=1/Math.sqrt(variance+1e-5);
+      normalized=[(z[0]-mean)*invStd,(z[1]-mean)*invStd];
+      u=[layer.gamma[0]*normalized[0]+layer.beta[0],layer.gamma[1]*normalized[1]+layer.beta[1]];
+    }
+    const r=[activate(u[0],layer.act),activate(u[1],layer.act)];
+    if(cache)caches.push({input:h,z,normalized,u,invStd,useLayerNorm});
+    residuals.push(r);h=[h[0]+r[0],h[1]+r[1]];states.push(h);
+  }
+  return{output:h,states,residuals,caches};
+}
+function evaluate(){
+  let sum=0;
+  for(const sample of samples){const o=forward(sample.input).output;sum+=(o[0]-sample.target[0])**2+(o[1]-sample.target[1])**2}
+  return sum/(samples.length*2);
+}
+function trainStep(){
+  const gw=layers.map(()=>[[0,0],[0,0]]),gb=layers.map(()=>[0,0]);
+  const gg=layers.map(()=>[0,0]),gt=layers.map(()=>[0,0]);
+  for(let n=0;n<BATCH_SIZE;n++){
+    const sample=samples[Math.floor(random()*samples.length)],f=forward(sample.input,true);
+    let dh=[(f.output[0]-sample.target[0])/BATCH_SIZE,(f.output[1]-sample.target[1])/BATCH_SIZE];
+    for(let l=layers.length-1;l>=0;l--){
+      const layer=layers[l],c=f.caches[l];
+      const du=[dh[0]*derivative(c.u[0],layer.act),dh[1]*derivative(c.u[1],layer.act)];
+      let dz=du;
+      if(c.useLayerNorm){
+        gg[l][0]+=du[0]*c.normalized[0];gg[l][1]+=du[1]*c.normalized[1];
+        gt[l][0]+=du[0];gt[l][1]+=du[1];
+        const dn=[du[0]*layer.gamma[0],du[1]*layer.gamma[1]];
+        const sumDn=dn[0]+dn[1],sumDnNorm=dn[0]*c.normalized[0]+dn[1]*c.normalized[1];
+        dz=[
+          .5*c.invStd*(2*dn[0]-sumDn-c.normalized[0]*sumDnNorm),
+          .5*c.invStd*(2*dn[1]-sumDn-c.normalized[1]*sumDnNorm)
+        ];
+      }
+      gw[l][0][0]+=c.input[0]*dz[0];gw[l][1][0]+=c.input[1]*dz[0];
+      gw[l][0][1]+=c.input[0]*dz[1];gw[l][1][1]+=c.input[1]*dz[1];
+      gb[l][0]+=dz[0];gb[l][1]+=dz[1];
+      dh=[dh[0]+dz[0]*layer.w[0][0]+dz[1]*layer.w[0][1],dh[1]+dz[0]*layer.w[1][0]+dz[1]*layer.w[1][1]];
+    }
+  }
+  const lr=Math.max(.00001,Math.min(1,Number(document.getElementById('lr').value)||.01));
+  const beta1=.9,beta2=.999,epsilon=1e-8,t=stepCount+1;
+  const correction1=1-Math.pow(beta1,t),correction2=1-Math.pow(beta2,t);
+  layers.forEach((layer,l)=>{
+    for(let i=0;i<2;i++)for(let j=0;j<2;j++){
+      const gradient=gw[l][i][j];
+      layer.adam.mw[i][j]=beta1*layer.adam.mw[i][j]+(1-beta1)*gradient;
+      layer.adam.vw[i][j]=beta2*layer.adam.vw[i][j]+(1-beta2)*gradient*gradient;
+      const m=layer.adam.mw[i][j]/correction1,v=layer.adam.vw[i][j]/correction2;
+      layer.w[i][j]-=lr*m/(Math.sqrt(v)+epsilon);
+    }
+    for(let i=0;i<2;i++){
+      const gradient=gb[l][i];
+      layer.adam.mb[i]=beta1*layer.adam.mb[i]+(1-beta1)*gradient;
+      layer.adam.vb[i]=beta2*layer.adam.vb[i]+(1-beta2)*gradient*gradient;
+      const m=layer.adam.mb[i]/correction1,v=layer.adam.vb[i]/correction2;
+      layer.b[i]-=lr*m/(Math.sqrt(v)+epsilon);
+      const gammaGradient=gg[l][i],betaGradient=gt[l][i];
+      layer.adam.mg[i]=beta1*layer.adam.mg[i]+(1-beta1)*gammaGradient;
+      layer.adam.vg[i]=beta2*layer.adam.vg[i]+(1-beta2)*gammaGradient*gammaGradient;
+      layer.adam.mt[i]=beta1*layer.adam.mt[i]+(1-beta1)*betaGradient;
+      layer.adam.vt[i]=beta2*layer.adam.vt[i]+(1-beta2)*betaGradient*betaGradient;
+      layer.gamma[i]-=lr*(layer.adam.mg[i]/correction1)/(Math.sqrt(layer.adam.vg[i]/correction2)+epsilon);
+      layer.beta[i]-=lr*(layer.adam.mt[i]/correction1)/(Math.sqrt(layer.adam.vt[i]/correction2)+epsilon);
+    }
+  });
+  stepCount++;const loss=evaluate();lossHistory.push(loss);if(lossHistory.length>1500)lossHistory.splice(0,300);return loss;
+}
+
+const pipeline=document.getElementById('pipeline'),spaceCanvases=[],residualCanvases=[];
+let pointLossCanvas=null;
+let flowBlocks=[],flowSvg=null;
+function spacePanel(label,extra=''){
+  const el=document.createElement('section');el.className=`space-panel ${extra}`;
+  el.innerHTML=`<div class="space-label">${label}</div><canvas></canvas><div class="space-meta"></div>`;return el;
+}
+function arrow(){const el=document.createElement('div');el.className='flow-arrow';return el}
+function place(el,column,row=1){el.style.gridColumn=column;el.style.gridRow=row;pipeline.appendChild(el)}
+function layerBox(index){
+  const layer=layers[index],el=document.createElement('section');el.className='layer-box';
+  el.innerHTML=`<div class="layer-title"><span>residual layer ${index+1}</span><span class="formula">h + σ(LN(hW+b))</span></div>
+    <div class="ctrl-row"><label>W</label><div class="matrix-input">
+      <input class="c0" data-i="0" data-j="0"><input class="c1" data-i="0" data-j="1">
+      <input class="c0" data-i="1" data-j="0"><input class="c1" data-i="1" data-j="1"></div></div>
+    <div class="ctrl-row"><label>b</label><div class="bias-input"><input data-b="0"><input data-b="1"></div></div>
+    <div class="ctrl-row"><label>γ</label><div class="bias-input"><input data-g="0"><input data-g="1"></div></div>
+    <div class="ctrl-row"><label>β</label><div class="bias-input"><input data-t="0"><input data-t="1"></div></div>
+    <div class="ctrl-row"><label>σ</label><div class="act-group">
+      <button data-act="linear">linear</button><button data-act="relu">relu</button>
+      <button data-act="gelu">gelu</button><button data-act="sigmoid">sigmoid</button>
+    </div></div>`;
+  const syncInputs=()=>{
+    el.querySelectorAll('[data-i]').forEach(input=>input.value=layer.w[+input.dataset.i][+input.dataset.j].toFixed(3));
+    el.querySelectorAll('[data-b]').forEach(input=>input.value=layer.b[+input.dataset.b].toFixed(3));
+    el.querySelectorAll('[data-g]').forEach(input=>input.value=layer.gamma[+input.dataset.g].toFixed(3));
+    el.querySelectorAll('[data-t]').forEach(input=>input.value=layer.beta[+input.dataset.t].toFixed(3));
+    el.querySelectorAll('[data-act]').forEach(b=>b.classList.toggle('active',b.dataset.act===layer.act));
+  };
+  el.syncInputs=syncInputs;syncInputs();
+  el.querySelectorAll('[data-i]').forEach(input=>input.onchange=()=>{layer.w[+input.dataset.i][+input.dataset.j]=Number(input.value)||0;parametersChanged()});
+  el.querySelectorAll('[data-b]').forEach(input=>input.onchange=()=>{layer.b[+input.dataset.b]=Number(input.value)||0;parametersChanged()});
+  el.querySelectorAll('[data-g]').forEach(input=>input.onchange=()=>{layer.gamma[+input.dataset.g]=Number(input.value)||0;parametersChanged()});
+  el.querySelectorAll('[data-t]').forEach(input=>input.onchange=()=>{layer.beta[+input.dataset.t]=Number(input.value)||0;parametersChanged()});
+  el.querySelectorAll('[data-act]').forEach(button=>button.onclick=()=>{layer.act=button.dataset.act;parametersChanged();syncInputs()});
+  return el;
+}
+function buildLayout(){
+  pipeline.innerHTML='';spaceCanvases.length=0;residualCanvases.length=0;flowBlocks=[];
+  let col=1;
+  const input=spacePanel('input distribution · h₀');place(input,col);spaceCanvases.push(input.querySelector('canvas'));
+  let precedingSpace=input;
+  for(let i=0;i<LAYER_COUNT;i++){
+    place(arrow(),++col);const box=layerBox(i);place(box,++col);layers[i].box=box;
+    const residual=spacePanel(`layer ${i+1} residual · F${i+1}(h${i})`);
+    const wrap=document.createElement('div');wrap.className='residual-wrap';wrap.appendChild(residual);
+    place(wrap,col,2);residualCanvases.push(residual.querySelector('canvas'));
+    place(arrow(),++col);const sum=document.createElement('div');sum.className='sum';sum.textContent='+';place(sum,++col);
+    place(arrow(),++col);const output=spacePanel(i===LAYER_COUNT-1?`final model space · h${LAYER_COUNT}`:`space · h${i+1}`);
+    place(output,++col);spaceCanvases.push(output.querySelector('canvas'));
+    flowBlocks.push({input:precedingSpace,box,residual,sum,output});
+    precedingSpace=output;
+  }
+  const finalCol=col;
+  const target=spacePanel('ground truth distribution · paired smooth warp','target-panel');
+  const up=document.createElement('div');up.className='target-arrow';up.textContent='↕';target.appendChild(up);
+  place(target,finalCol,2);window.targetCanvas=target.querySelector('canvas');
+  place(arrow(),++col);
+  const comparison=spacePanel('per-point loss · output ↔ target','point-loss-panel');
+  comparison.style.gridColumn=++col;comparison.style.gridRow='1 / span 2';
+  pipeline.appendChild(comparison);pointLossCanvas=comparison.querySelector('canvas');
+  place(arrow(),++col);const train=document.createElement('section');train.className='train-box';
+  train.innerHTML=`<div class="layer-title"><span>Adam</span><span class="formula">coordinate MSE</span></div>
+    <div class="loss"><span>loss</span><strong id="lossValue">—</strong><div id="stepValue">step 0</div></div>
+    <div class="ctrl-row"><label>lr</label><input id="lr" type="number" min=".00001" max="1" step=".001" value=".01"></div>
+    <div class="ctrl-row"><label>LN</label><input id="useLayerNorm" type="checkbox"><span class="formula">2D LayerNorm (experimental)</span></div>
+    <div class="button-row"><button id="play">play</button><button id="pause" disabled>pause</button><button id="single">step</button><button id="reset">reset</button></div>
+    <canvas id="lossCanvas"></canvas>`;
+  place(train,++col);
+  document.getElementById('play').onclick=()=>setRunning(true);
+  document.getElementById('pause').onclick=()=>setRunning(false);
+  document.getElementById('single').onclick=()=>{setRunning(false);render(trainStep())};
+  document.getElementById('reset').onclick=reset;
+  document.getElementById('useLayerNorm').onchange=parametersChanged;
+  buildFlowSvg();
+  requestAnimationFrame(updateFlow);
+}
+
+function buildFlowSvg(){
+  flowSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');flowSvg.classList.add('flow-svg');
+  flowSvg.innerHTML=`<defs><marker id="flowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#aaa"/></marker></defs>`;
+  flowBlocks.forEach((_,i)=>{
+    ['toLayer','toResidual','skip','residualToAdd','addToOutput'].forEach(name=>{
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.id=`${name}${i}`;path.classList.add('flow-path');if(name==='skip')path.classList.add('skip-path');
+      path.setAttribute('marker-end','url(#flowHead)');flowSvg.appendChild(path);
+    });
+  });
+  pipeline.appendChild(flowSvg);
+}
+function updateFlow(){
+  if(!flowSvg)return;
+  const pr=pipeline.getBoundingClientRect(),point=el=>{const r=el.getBoundingClientRect();return{l:r.left-pr.left,r:r.right-pr.left,t:r.top-pr.top,b:r.bottom-pr.top,x:r.left-pr.left+r.width/2,y:r.top-pr.top+r.height/2}};
+  flowSvg.setAttribute('width',pipeline.scrollWidth);flowSvg.setAttribute('height',pipeline.scrollHeight);
+  flowBlocks.forEach((block,i)=>{
+    const a=point(block.input),b=point(block.box),r=point(block.residual),s=point(block.sum),o=point(block.output);
+    document.getElementById(`toLayer${i}`).setAttribute('d',`M${a.r},${a.y+38} L${b.l-8},${b.y}`);
+    document.getElementById(`toResidual${i}`).setAttribute('d',`M${b.x},${b.b} L${r.x},${r.t-8}`);
+    document.getElementById(`skip${i}`).setAttribute('d',`M${a.r},${a.y-42} C${a.r+60},${a.t-24} ${s.x-70},${s.t-24} ${s.x},${s.t-6}`);
+    document.getElementById(`residualToAdd${i}`).setAttribute('d',`M${r.r},${r.y} C${r.r+50},${r.y} ${s.x},${s.b+45} ${s.x},${s.b+6}`);
+    document.getElementById(`addToOutput${i}`).setAttribute('d',`M${s.r+5},${s.y} L${o.l-8},${o.y}`);
+  });
+}
+
+function canvasContext(canvas){
+  const dpr=Math.min(devicePixelRatio||1,2),r=canvas.getBoundingClientRect(),w=Math.max(1,Math.round(r.width)),h=Math.max(1,Math.round(r.height));
+  if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr}
+  const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return{c,w,h};
+}
+function drawLayerAxes(c,sx,sy,layer,followed,extent){
+  const raw=[
+    {a:{x:layer.w[0][0],y:layer.w[1][0]},bias:layer.b[0],color:'#d8362a',name:'w0'},
+    {a:{x:layer.w[0][1],y:layer.w[1][1]},bias:layer.b[1],color:'#2266c4',name:'w1'}
+  ];
+  const targets=axisTargets(raw[0].a,raw[1].a);
+  raw.forEach((axis,index)=>{
+    const a=followed?targets[index]:axis.a,bias=followed?0:axis.bias;
+    const len=Math.hypot(a.x,a.y)||1,ux=a.x/len,uy=a.y/len,max=extent*1.45/len;
+    const line=(x0,y0,x1,y1,color,width=.7)=>{
+      c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.moveTo(sx(x0),sy(y0));c.lineTo(sx(x1),sy(y1));c.stroke();
+    };
+    line(-a.x*max,-a.y*max,a.x*max,a.y*max,layer.act==='linear'?axis.color:'#bdbdb7');
+    const ticks=axisTicks(layer.act,max+Math.abs(bias)+1);
+    if(layer.act!=='linear'&&ticks.length>1){
+      const first=activationAxisCoord(ticks[0],layer.act,bias),last=activationAxisCoord(ticks[ticks.length-1],layer.act,bias);
+      if(first!==null&&last!==null)line(a.x*first,a.y*first,a.x*last,a.y*last,axis.color,1);
+    }
+    const tickSize=.05*extent,tpx=-uy*tickSize,tpy=ux*tickSize;
+    let lastTickScreen=null;
+    ticks.forEach(t=>{
+      const distance=activationAxisCoord(t,layer.act,bias);if(distance===null)return;
+      if(Math.abs(distance)>max+.2)return;
+      const x=a.x*distance,y=a.y*distance;
+      const screen={x:sx(x),y:sy(y)};
+      if(lastTickScreen&&Math.hypot(screen.x-lastTickScreen.x,screen.y-lastTickScreen.y)<18)return;
+      lastTickScreen=screen;
+      line(x-tpx,y-tpy,x+tpx,y+tpy,axis.color,.65);
+      c.fillStyle=axis.color;c.font='8px Courier New';
+      c.fillText(formatActivationTick(t,layer.act),sx(x-tpx*2.4)+2,sy(y-tpy*2.4)+2);
+    });
+    const ex=a.x*max,ey=a.y*max,screenX=sx(ex),screenY=sy(ey),angle=Math.atan2(-uy,ux),size=5;
+    c.fillStyle=axis.color;c.beginPath();c.moveTo(screenX,screenY);
+    c.lineTo(screenX-size*Math.cos(angle-.48),screenY-size*Math.sin(angle-.48));
+    c.lineTo(screenX-size*Math.cos(angle+.48),screenY-size*Math.sin(angle+.48));c.closePath();c.fill();
+    c.font='9px Courier New';c.fillText(followed?axis.name:`${axis.name}'`,screenX+4,screenY-4);
+  });
+}
+function drawMarker(c,x,y,point,size=3.2,alpha=.85){
+  c.save();c.strokeStyle=point.color;c.fillStyle=point.color;c.globalAlpha=alpha;c.lineWidth=1.35;
+  c.beginPath();
+  if(point.marker==='cross'){
+    c.moveTo(x-size,y-size);c.lineTo(x+size,y+size);
+    c.moveTo(x+size,y-size);c.lineTo(x-size,y+size);c.stroke();
+  }else{
+    c.arc(x,y,size,0,Math.PI*2);c.stroke();
+  }
+  c.restore();
+}
+function drawPoints(canvas,points,axisInfo=null){
+  const{c,w,h}=canvasContext(canvas),pad=22;let extent=1;
+  points.forEach(p=>extent=Math.max(extent,Math.abs(p.xy[0]),Math.abs(p.xy[1])));extent*=1.14;
+  const scale=Math.min((w-2*pad)/(2*extent),(h-2*pad)/(2*extent)),sx=x=>w/2+x*scale,sy=y=>h/2-y*scale;
+  c.clearRect(0,0,w,h);c.strokeStyle='#e5e5df';c.lineWidth=1;
+  for(let i=-Math.floor(extent);i<=Math.floor(extent);i++){c.beginPath();c.moveTo(sx(i),pad);c.lineTo(sx(i),h-pad);c.moveTo(pad,sy(i));c.lineTo(w-pad,sy(i));c.stroke()}
+  c.strokeStyle='#aaa';c.beginPath();c.moveTo(pad,sy(0));c.lineTo(w-pad,sy(0));c.moveTo(sx(0),pad);c.lineTo(sx(0),h-pad);c.stroke();
+  if(axisInfo)drawLayerAxes(c,sx,sy,axisInfo.layer,axisInfo.followed,extent);
+  points.forEach(p=>drawMarker(c,sx(p.xy[0]),sy(p.xy[1]),p));
+  const panel=canvas.closest('.space-panel');if(panel)panel.querySelector('.space-meta').textContent=`±${extent.toFixed(1)}`;
+}
+function drawLoss(){
+  const canvas=document.getElementById('lossCanvas'),{c,w,h}=canvasContext(canvas);c.clearRect(0,0,w,h);
+  if(lossHistory.length<2)return;const max=Math.max(...lossHistory,.001),n=lossHistory.length;
+  c.strokeStyle='#e5e5df';c.beginPath();c.moveTo(0,h-1);c.lineTo(w,h-1);c.stroke();
+  c.strokeStyle='#d8362a';c.lineWidth=1.4;c.beginPath();
+  lossHistory.forEach((v,i)=>{const x=i/(n-1)*w,y=4+(1-v/max)*(h-9);i?c.lineTo(x,y):c.moveTo(x,y)});c.stroke();
+}
+function drawPointLoss(canvas,outputs){
+  const{c,w,h}=canvasContext(canvas),pad=22;let extent=1;
+  samples.forEach((sample,i)=>{
+    extent=Math.max(extent,Math.abs(sample.target[0]),Math.abs(sample.target[1]),
+      Math.abs(outputs[i][0]),Math.abs(outputs[i][1]));
+  });
+  extent*=1.14;
+  const scale=Math.min((w-2*pad)/(2*extent),(h-2*pad)/(2*extent));
+  const sx=x=>w/2+x*scale,sy=y=>h/2-y*scale;
+  c.clearRect(0,0,w,h);c.strokeStyle='#e5e5df';c.lineWidth=1;
+  for(let i=-Math.floor(extent);i<=Math.floor(extent);i++){
+    c.beginPath();c.moveTo(sx(i),pad);c.lineTo(sx(i),h-pad);
+    c.moveTo(pad,sy(i));c.lineTo(w-pad,sy(i));c.stroke();
+  }
+  c.strokeStyle='#aaa';c.beginPath();c.moveTo(pad,sy(0));c.lineTo(w-pad,sy(0));
+  c.moveTo(sx(0),pad);c.lineTo(sx(0),h-pad);c.stroke();
+
+  samples.forEach((sample,i)=>{
+    const output=outputs[i],color=sample.color;
+    c.save();c.strokeStyle=color;c.globalAlpha=.55;c.lineWidth=1;
+    c.setLineDash([4,4]);c.beginPath();c.moveTo(sx(output[0]),sy(output[1]));
+    c.lineTo(sx(sample.target[0]),sy(sample.target[1]));c.stroke();c.restore();
+
+    drawMarker(c,sx(sample.target[0]),sy(sample.target[1]),sample,4.4,.45);
+    drawMarker(c,sx(output[0]),sy(output[1]),sample,3.1,.95);
+  });
+  c.globalAlpha=1;
+  const panel=canvas.closest('.space-panel');
+  if(panel)panel.querySelector('.space-meta').textContent='● output · ○ target';
+}
+function render(loss=evaluate()){
+  const states=Array.from({length:LAYER_COUNT+1},()=>[]),residuals=Array.from({length:LAYER_COUNT},()=>[]);
+  samples.forEach(sample=>{const f=forward(sample.input);f.states.forEach((xy,i)=>states[i].push({xy,color:sample.color,marker:sample.marker}));f.residuals.forEach((xy,i)=>residuals[i].push({xy,color:sample.color,marker:sample.marker}))});
+  states.forEach((p,i)=>drawPoints(spaceCanvases[i],p,i<LAYER_COUNT?{layer:layers[i],followed:false}:null));
+  residuals.forEach((p,i)=>drawPoints(residualCanvases[i],p,{layer:layers[i],followed:true}));
+  drawPoints(window.targetCanvas,samples.map(s=>({xy:s.target,color:s.color,marker:s.marker})));
+  drawPointLoss(pointLossCanvas,states[LAYER_COUNT].map(p=>p.xy));drawLoss();
+  document.getElementById('lossValue').textContent=loss.toFixed(6);document.getElementById('stepValue').textContent=`step ${stepCount}`;
+  layers.forEach(layer=>layer.box.syncInputs());
+}
+function parametersChanged(){setRunning(false);lossHistory=[];stepCount=0;resetOptimizer();render()}
+function setRunning(value){
+  running=value;
+  const play=document.getElementById('play'),pause=document.getElementById('pause');
+  if(play)play.disabled=value;if(pause)pause.disabled=!value;
+  document.getElementById('status').textContent=value?'training · paired coordinate MSE':'paused · paired coordinate MSE';
+  if(value){cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+}
+function loop(){if(!running)return;let loss;for(let i=0;i<STEPS_PER_FRAME;i++)loss=trainStep();render(loss);raf=requestAnimationFrame(loop)}
+function reset(){setRunning(false);samples=makeSamples();layers=newLayers();stepCount=0;lossHistory=[];buildLayout();render()}
+window.addEventListener('resize',()=>{render();updateFlow()});document.addEventListener('visibilitychange',()=>{if(document.hidden)setRunning(false)});
+reset();
+</script>
+</body>
+</html>

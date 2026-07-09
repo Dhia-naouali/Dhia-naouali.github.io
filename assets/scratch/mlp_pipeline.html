@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLP Space Pipeline</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #ffffff; font-family: 'Courier New', monospace; color: #2a2a2a; height: 100%; overflow: hidden; }
+
+  #scrollWrap {
+    width: 100vw; height: 100vh; overflow-x: auto; overflow-y: hidden;
+    display: flex; align-items: stretch;
+  }
+  #track {
+    display: flex; align-items: center; height: 100%; padding: 0 40px;
+  }
+
+  .space-panel {
+    position: relative; width: 460px; height: 460px; flex-shrink: 0;
+    border: 1px solid #c4c4c0; background: #ffffff;
+  }
+  .space-panel canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+  .space-panel canvas:active { cursor: grabbing; }
+  .space-label {
+    position: absolute; top: 8px; left: 10px; font-size: 11px; color: #8a8a84;
+    letter-spacing: 0.08em; pointer-events: none;
+  }
+  .space-hint {
+    position: absolute; bottom: 8px; left: 10px; font-size: 10px; color: #b4b4ae;
+    pointer-events: none;
+  }
+
+  .arrow {
+    width: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    color: #c4c4c0; font-size: 18px;
+  }
+
+  .layer-box {
+    flex-shrink: 0; width: 220px;
+    border: 1px solid #2a2a2a; background: #fafaf8;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+    position: relative;
+  }
+  .layer-box .layer-title {
+    font-size: 11px; color: #2a2a2a; letter-spacing: 0.1em; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .layer-box .removeLayer {
+    background: none; border: 1px solid #c4c4c0; color: #8a8a84;
+    font-size: 10px; padding: 1px 6px; cursor: pointer; line-height: 1.4;
+  }
+  .layer-box .removeLayer:hover { border-color: #d8362a; color: #d8362a; }
+
+  .ctrl-row { display: flex; align-items: center; gap: 8px; }
+  .ctrl-row label { font-size: 10px; color: #6a6a64; letter-spacing: 0.06em; width: 18px; flex-shrink:0; }
+
+  .matrix-input {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  }
+  .matrix-input input {
+    width: 44px; background: #ffffff; border: 1px solid #c4c4c0;
+    font-family: 'Courier New', monospace; font-size: 11px;
+    padding: 3px 4px; text-align: center; outline: none;
+    transition: border-color 0.15s;
+  }
+  .matrix-input input.c0 { color: #d8362a; }
+  .matrix-input input.c0:focus { border-color: #d8362a; }
+  .matrix-input input.c1 { color: #2266c4; }
+  .matrix-input input.c1:focus { border-color: #2266c4; }
+
+  .bias-input { display: flex; gap: 4px; }
+  .bias-input input {
+    width: 44px; background: #ffffff; border: 1px solid #c4c4c0;
+    color: #2a2a2a; font-family: 'Courier New', monospace; font-size: 11px;
+    padding: 3px 4px; text-align: center; outline: none;
+  }
+  .bias-input input:focus { border-color: #2a2a2a; }
+
+  .act-group { display: flex; flex-wrap: wrap; gap: 4px; }
+  .act-btn {
+    background: none; border: 1px solid #c4c4c0; color: #6a6a64;
+    font-family: 'Courier New', monospace; font-size: 10px; padding: 3px 7px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .act-btn:hover { border-color: #2a2a2a; color: #2a2a2a; }
+  .act-btn.active { border-color: #d8362a; color: #d8362a; background: #d8362a18; }
+
+  .btn-row { display: flex; flex-wrap: wrap; gap: 4px; }
+  .layer-box button.action {
+    background: none; border: 1px solid #a8a8a2; color: #2a2a2a;
+    font-family: 'Courier New', monospace; font-size: 10px; padding: 4px 8px; cursor: pointer;
+    flex: 1; min-width: 60px;
+  }
+  .layer-box button.action:hover { background: #e8e8e2; }
+  .layer-box button.action.toggled { border-color: #d8362a; color: #d8362a; background: #d8362a14; }
+
+  #addLayerBtn {
+    flex-shrink: 0; width: 70px; height: 70px; border-radius: 50%;
+    border: 1px solid #a8a8a2; background: #ffffff; color: #2a2a2a;
+    font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    align-self: center;
+  }
+  #addLayerBtn:hover { background: #e8e8e2; }
+
+  #topBar {
+    position: fixed; top: 14px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: #8a8a84; pointer-events: none; z-index: 10;
+  }
+  #topBar .title { letter-spacing: 0.1em; }
+  #scrollHint { pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div id="topBar">
+  <span class="title">MLP SPACE PIPELINE</span>
+  <span id="scrollHint">scroll horizontally &middot; drag points to add &middot; click point to remove &middot; drag canvas to pan</span>
+</div>
+
+<div id="scrollWrap">
+  <div id="track"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   Shared math: activations, inverses, axis-snap target picking
+   ============================================================ */
+function erfApprox(x) {
+  const t = 1/(1+0.3275911*x);
+  const poly = t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))));
+  return 1 - poly*Math.exp(-x*x);
+}
+function applyActivation(z, act){
+  if(act==='none') return z;
+  if(act==='relu') return Math.max(0,z);
+  if(act==='gelu'){
+    const x = z/Math.SQRT2;
+    const erf = x<0 ? -erfApprox(-x) : erfApprox(x);
+    return 0.5*z*(1+erf);
+  }
+  if(act==='sigmoid') return 1/(1+Math.exp(-z));
+  return z;
+}
+function transformPoint(ox, oy, w, b, act, t){
+  // Points are row vectors: [ox, oy] W + b. This matches the UI, where
+  // column 0 is the red output axis and column 1 is the blue output axis.
+  const z0 = ox*w[0][0] + oy*w[1][0] + b[0];
+  const z1 = ox*w[0][1] + oy*w[1][1] + b[1];
+  const fx = applyActivation(z0, act);
+  const fy = applyActivation(z1, act);
+  return { x: ox + (fx-ox)*t, y: oy + (fy-oy)*t };
+}
+function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+
+const ACT = {
+  none: {
+    inv: t => t,
+    tickRange: (maxZ) => { const n=Math.ceil(maxZ)+1, ticks=[]; for(let t=-n;t<=n;t++) ticks.push(t); return ticks; },
+  },
+  relu: {
+    inv: t => (t < 0 ? null : t),
+    tickRange: (maxZ) => { const ticks=[], n=Math.ceil(maxZ)+1; for(let t=0;t<=n;t++) ticks.push(t); return ticks; },
+  },
+  gelu: {
+    inv: t => {
+      const GELU_MIN = -0.1699;
+      if (t < GELU_MIN) return null;
+      const gelu = z => { const x=z/Math.SQRT2; const erf=x<0?-erfApprox(-x):erfApprox(x); return 0.5*z*(1+erf); };
+      const dgelu = z => { const x=z/Math.SQRT2; const erf=x<0?-erfApprox(-x):erfApprox(x); const phi=Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI); return 0.5*(1+erf)+z*phi; };
+      let z = t > 0 ? t : -0.5;
+      for (let i=0;i<20;i++){ const f=gelu(z)-t, df=dgelu(z); if(Math.abs(df)<1e-12) break; z -= f/df; if(Math.abs(f)<1e-9) break; }
+      return z;
+    },
+    tickRange: (maxZ) => {
+      const GELU_MIN = -0.169, ticks=[], n=Math.ceil(maxZ)+1;
+      for (let t=-1;t<=n;t++) if (t > GELU_MIN-0.001) ticks.push(t);
+      return ticks;
+    },
+  },
+  sigmoid: {
+    inv: t => { if (t<=0||t>=1) return null; return Math.log(t/(1-t)); },
+    tickRange: () => [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99],
+  },
+};
+
+const CANDIDATE_TARGETS = [ {x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1} ];
+function angleBetween(ax, bx){
+  const la = Math.hypot(ax.x,ax.y)||1, lb = Math.hypot(bx.x,bx.y)||1;
+  const dot = (ax.x*bx.x + ax.y*bx.y)/(la*lb);
+  return Math.acos(Math.max(-1,Math.min(1,dot)));
+}
+function pickBestTargets(w0raw, w1raw){
+  let best = null, bestCost = Infinity;
+  for(const t0 of CANDIDATE_TARGETS){
+    for(const t1 of CANDIDATE_TARGETS){
+      const onSameLine = (t0.x !== 0) === (t1.x !== 0);
+      if(onSameLine) continue;
+      const cost = angleBetween(w0raw,t0) + angleBetween(w1raw,t1);
+      if(cost < bestCost){ bestCost = cost; best = { w0:t0, w1:t1 }; }
+    }
+  }
+  return best || { w0:{x:1,y:0}, w1:{x:0,y:1} };
+}
+
+const POINT_COLOR_DARK = [0.16, 0.16, 0.16];
+const POINT_COLOR_GRAY = [0.55, 0.55, 0.52];
+
+function activationAxisCoord(actFns, tickValue, bias) {
+  const z = actFns.inv(tickValue);
+  return z === null ? null : z - bias;
+}
+function formatActivationTick(act, t) {
+  if (act === 'sigmoid') return (t < 0.1 || t > 0.9) ? t.toFixed(2) : t.toFixed(1);
+  return Number.isInteger(t) ? String(t) : t.toFixed(1);
+}
+
+/* ============================================================
+   SpacePanel: one self-contained 3D scene showing a point cloud
+   and (optionally) the incoming layer's red/blue axes.
+   ============================================================ */
+class SpacePanel {
+  constructor(container, { withAxes }) {
+    this.el = document.createElement('div');
+    this.el.className = 'space-panel';
+    const label = document.createElement('div');
+    label.className = 'space-label';
+    this.labelEl = label;
+    this.el.appendChild(label);
+    const hint = document.createElement('div');
+    hint.className = 'space-hint';
+    hint.textContent = 'click empty = add point · click point = remove · drag = move';
+    this.el.appendChild(hint);
+    const canvas = document.createElement('canvas');
+    this.el.appendChild(canvas);
+    container.appendChild(this.el);
+
+    this.canvas = canvas;
+    this.withAxes = withAxes; // null for the very first (pure input) panel
+    this.points = []; // {ox, oy, gray}
+    this.layer = null; // reference to LayerBox feeding this panel (i.e. incoming layer; null for first)
+    this.outgoingLayer = null; // reference to LayerBox this panel feeds INTO (null for last)
+    this.followT = 0;
+    this.lockedTargets = { w0:{x:1,y:0}, w1:{x:0,y:1} };
+
+    this._initThree();
+    this._initInteraction();
+    this.seed();
+    this.resize();
+  }
+
+  setLabel(text){ this.labelEl.textContent = text; }
+
+  _initThree(){
+    const VS = 5;
+    this.VS = VS;
+    this.zoom = 1; this.pan = {x:0,y:0};
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+    this.renderer.setPixelRatio(devicePixelRatio);
+    this.renderer.setClearColor(0xffffff);
+    this.scene = new THREE.Scene();
+    this.cam = new THREE.OrthographicCamera(-VS,VS,VS,-VS,-10,10);
+
+    const gridPts = [];
+    for (let i=-10;i<=10;i++) gridPts.push(-10,i,0,10,i,0,i,-10,0,i,10,0);
+    const gridGeo = new THREE.BufferGeometry();
+    gridGeo.setAttribute('position', new THREE.Float32BufferAttribute(gridPts,3));
+    this.scene.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color:0xe2e2dc })));
+
+    const axGeo = new THREE.BufferGeometry();
+    axGeo.setAttribute('position', new THREE.Float32BufferAttribute([-10,0,0,10,0,0,0,-10,0,0,10,0],3));
+    this.scene.add(new THREE.LineSegments(axGeo, new THREE.LineBasicMaterial({ color:0xa8a8a2 })));
+
+    this.MAXN = 256;
+    this.posArr = new Float32Array(this.MAXN*3);
+    this.colArr = new Float32Array(this.MAXN*3);
+    this.ptGeo = new THREE.BufferGeometry();
+    this.ptGeo.setAttribute('position', new THREE.BufferAttribute(this.posArr,3).setUsage(THREE.DynamicDrawUsage));
+    this.ptGeo.setAttribute('aColor', new THREE.BufferAttribute(this.colArr,3).setUsage(THREE.DynamicDrawUsage));
+    this.ptGeo.setDrawRange(0,0);
+    const ptMat = new THREE.ShaderMaterial({
+      uniforms: { uSize: { value: devicePixelRatio * 8 } },
+      vertexShader: `uniform float uSize; attribute vec3 aColor; varying vec3 vColor;
+        void main() { vColor=aColor; gl_PointSize=uSize; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+      fragmentShader: `varying vec3 vColor;
+        void main() { float r=length(gl_PointCoord-0.5); if(r>0.5)discard;
+          float a=1.0-smoothstep(0.3,0.5,r); gl_FragColor=vec4(vColor,a); }`,
+      transparent:true, depthWrite:false,
+    });
+    this.ptCloud = new THREE.Points(this.ptGeo, ptMat);
+    this.scene.add(this.ptCloud);
+
+    this.labelCanvas = document.createElement('canvas');
+    this.labelCanvas.style.cssText = 'position:absolute; top:0; left:0; pointer-events:none;';
+    this.el.appendChild(this.labelCanvas);
+    this.lctx = this.labelCanvas.getContext('2d');
+    this.labelData = [];
+    this.axisGroups = { in: null, out: null };
+    this.axisSignatures = { in: null, out: null };
+  }
+
+  applyCamera(){
+    const { VS, zoom, pan, aspect } = this;
+    this.cam.left = -aspect*VS/zoom + pan.x;
+    this.cam.right = aspect*VS/zoom + pan.x;
+    this.cam.top = VS/zoom + pan.y;
+    this.cam.bottom = -VS/zoom + pan.y;
+    this.cam.updateProjectionMatrix();
+  }
+
+  resize(){
+    const w = this.el.clientWidth, h = this.el.clientHeight;
+    this.W = w; this.H = h; this.aspect = w/h;
+    this.renderer.setSize(w,h);
+    this.labelCanvas.width = w; this.labelCanvas.height = h;
+    this.applyCamera();
+    this.drawLabels();
+  }
+
+  seed(n=48){
+    this.points = [];
+    for(let i=0;i<n;i++){
+      const angle=Math.random()*Math.PI*2, rad=Math.sqrt(Math.random())*3.5;
+      this.points.push({ ox: Math.cos(angle)*rad, oy: Math.sin(angle)*rad, gray: Math.random()<0.5 });
+    }
+  }
+
+  worldToScreen(wx,wy){
+    const nx=(wx-this.pan.x)*this.zoom/(this.aspect*this.VS), ny=(wy-this.pan.y)*this.zoom/this.VS;
+    return {x:(nx+1)/2*this.W, y:(-ny+1)/2*this.H};
+  }
+  screenToWorld(cx,cy){
+    const nx=(cx/this.W)*2-1, ny=-(cy/this.H)*2+1;
+    return {x:nx*this.aspect*this.VS/this.zoom+this.pan.x, y:ny*this.VS/this.zoom+this.pan.y};
+  }
+  drawLabels(){
+    const ctx = this.lctx;
+    ctx.clearRect(0,0,this.W,this.H);
+    ctx.font = '10px Courier New, monospace';
+    for(const lb of this.labelData){
+      const s = this.worldToScreen(lb.wx, lb.wy);
+      ctx.globalAlpha = lb.alpha !== undefined ? lb.alpha : 1;
+      ctx.fillStyle = lb.color;
+      ctx.fillText(lb.text, s.x+lb.ox, s.y+lb.oy);
+    }
+    ctx.globalAlpha = 1;
+  }
+  makeLine(x0,y0,x1,y1,color,opacity=1){
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute([x0,y0,0.1,x1,y1,0.1],3));
+    return new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:opacity<1,opacity}));
+  }
+
+  // Pull the coordinates currently visible in the preceding space. This matters
+  // for deep pipelines: a layer consumes the preceding layer's output, not its
+  // original, pre-transform coordinates.
+  syncFromLayer(){
+    if(!this.layer) return; // first panel has no upstream layer
+    const src = this.layer.inputPanel;
+    this.points = src.getDisplayedPoints();
+  }
+
+  getDisplayedPoints(){
+    if(!this.layer) {
+      return this.points.map(p => ({ ox:p.ox, oy:p.oy, gray:p.gray }));
+    }
+    const w = this.layer.getW();
+    const b = this.layer.getB();
+    const act = this.layer.currentAct;
+    const eased = easeInOutCubic(this.followT);
+    return this.points.map(p => {
+      const q = transformPoint(p.ox, p.oy, w, b, act, eased);
+      return { ox:q.x, oy:q.y, gray:p.gray };
+    });
+  }
+
+  render(){
+    const n = Math.min(this.points.length, this.MAXN);
+    let w=null,b=null,act='none',eased=0;
+    if(this.layer){
+      w = this.layer.getW(); b = this.layer.getB(); act = this.layer.currentAct;
+      eased = easeInOutCubic(this.followT);
+    }
+    for(let i=0;i<n;i++){
+      const p = this.points[i];
+      let x=p.ox, y=p.oy;
+      if(this.layer && eased > 0.0001){
+        const tp = transformPoint(p.ox, p.oy, w, b, act, eased);
+        x = tp.x; y = tp.y;
+      }
+      this.posArr[i*3]=x; this.posArr[i*3+1]=y; this.posArr[i*3+2]=0;
+      const c = p.gray ? POINT_COLOR_GRAY : POINT_COLOR_DARK;
+      this.colArr[i*3]=c[0]; this.colArr[i*3+1]=c[1]; this.colArr[i*3+2]=c[2];
+    }
+    this.ptGeo.setDrawRange(0,n);
+    this.ptGeo.attributes.position.needsUpdate = true;
+    this.ptGeo.attributes.aColor.needsUpdate = true;
+
+    // The output panel is the destination coordinate frame. Keep its axes fixed
+    // while the points move into it; the corresponding raw axes are shown on
+    // the input panel below.
+    if(this.layer) this._buildAxisViz('in', w, b, act, 1, this.lockedTargets, 1.0);
+    else this._clearAxisViz('in');
+
+    // A layer's proposed axes belong to its input space.
+    if(this.outgoingLayer){
+      const ow = this.outgoingLayer.getW(), ob = this.outgoingLayer.getB(), oact = this.outgoingLayer.currentAct;
+      this._buildAxisViz('out', ow, ob, oact, 0, this.outgoingLayer.lockedTargets, 1.0);
+    } else this._clearAxisViz('out');
+
+    this.renderer.render(this.scene, this.cam);
+    this.drawLabels();
+  }
+
+  _clearAxisViz(key){
+    if(this.axisGroups[key]){
+      this.scene.remove(this.axisGroups[key]);
+      this._disposeObject(this.axisGroups[key]);
+      this.axisGroups[key]=null;
+    }
+    this.axisSignatures[key] = null;
+    this.labelData = this.labelData.filter(lb => lb.key !== key);
+  }
+
+  _buildAxisViz(key, w, b, act, eased, lockedTargets, opacityMul){
+    const signature = [
+      act, eased, opacityMul, ...w[0], ...w[1], ...b,
+      lockedTargets.w0.x, lockedTargets.w0.y,
+      lockedTargets.w1.x, lockedTargets.w1.y,
+    ].join('|');
+    if(this.axisSignatures[key] === signature) return;
+    if(this.axisGroups[key]){
+      this.scene.remove(this.axisGroups[key]);
+      this._disposeObject(this.axisGroups[key]);
+      this.axisGroups[key]=null;
+    }
+    this.axisSignatures[key] = signature;
+    this.labelData = this.labelData.filter(lb => lb.key !== key);
+    const actFns = ACT[act];
+    const rawAxes = [
+      { ax:{x:w[0][0],y:w[1][0]}, bi:b[0], hex:0xd8362a, css:'#d8362a', name:'w0', target:lockedTargets.w0 },
+      { ax:{x:w[0][1],y:w[1][1]}, bi:b[1], hex:0x2266c4, css:'#2266c4', name:'w1', target:lockedTargets.w1 },
+    ];
+    const g = new THREE.Group();
+    for (const {ax: axRaw, bi, hex, css, name, target} of rawAxes) {
+      const rawLen = Math.hypot(axRaw.x, axRaw.y) || 1;
+      const rux = axRaw.x/rawLen, ruy = axRaw.y/rawLen;
+      const lerpLen = rawLen + (1-rawLen)*eased;
+      const lx = rux + (target.x-rux)*eased;
+      const ly = ruy + (target.y-ruy)*eased;
+      const lnorm = Math.hypot(lx,ly) || 1;
+      const ax = { x:(lx/lnorm)*lerpLen, y:(ly/lnorm)*lerpLen };
+      const biLerp = bi * (1-eased);
+
+      const len = Math.hypot(ax.x, ax.y) || 1;
+      const ux = ax.x/len, uy = ax.y/len;
+      const maxZ = Math.ceil(6/len) + 2;
+
+      g.add(this.makeLine(-ax.x*maxZ,-ax.y*maxZ, ax.x*maxZ,ax.y*maxZ, hex, (act==='none'?0.55:0.2)*opacityMul));
+
+      if (act !== 'none') {
+        const ticks = actFns.tickRange(maxZ);
+        if (ticks.length >= 2) {
+          const s0 = activationAxisCoord(actFns, ticks[0], biLerp);
+          const s1 = activationAxisCoord(actFns, ticks[ticks.length-1], biLerp);
+          if (s0 !== null && s1 !== null) {
+            g.add(this.makeLine(ax.x*s0,ax.y*s0, ax.x*s1,ax.y*s1, hex, 0.85*opacityMul));
+          }
+        }
+        if (act === 'relu') {
+          const sThresh = -biLerp;
+          g.add(this.makeLine(-ax.x*maxZ,-ax.y*maxZ, ax.x*sThresh,ax.y*sThresh, 0xc4c4c0, 0.6*opacityMul));
+        }
+      }
+
+      const ex=ax.x*maxZ, ey=ax.y*maxZ;
+      const px=-uy*0.13, py=ux*0.13;
+      const ag=new THREE.BufferGeometry();
+      ag.setAttribute('position',new THREE.Float32BufferAttribute([
+        ex-ux*0.22+px,ey-uy*0.22+py,0.1, ex,ey,0.1, ex-ux*0.22-px,ey-uy*0.22-py,0.1,
+      ],3));
+      g.add(new THREE.Line(ag,new THREE.LineBasicMaterial({color:hex, transparent:opacityMul<1, opacity:opacityMul})));
+
+      const tl=0.09;
+      const tpx=-uy*tl, tpy=ux*tl;
+      const ticks = actFns.tickRange(maxZ + Math.abs(biLerp) + 1);
+      for (const t of ticks) {
+        const s = activationAxisCoord(actFns, t, biLerp);
+        if (s === null) continue;
+        const tx = ax.x * s, ty = ax.y * s;
+        if (Math.abs(s) > maxZ + 0.5) continue;
+        const isZero = Math.abs(t) < 0.001;
+        const sz = isZero ? 1.6 : 1.0;
+        g.add(this.makeLine(tx-tpx*sz,ty-tpy*sz, tx+tpx*sz,ty+tpy*sz, hex, opacityMul));
+        const label = formatActivationTick(act, t);
+        this.labelData.push({key, wx:tx-tpx*3.5, wy:ty-tpy*3.5, text:label, color:css, ox:4, oy:4, alpha:opacityMul});
+      }
+      {
+        const sThresh = -biLerp;
+        if (Math.abs(sThresh) <= maxZ) {
+          const tx = ax.x*sThresh, ty = ax.y*sThresh;
+          const ml = 0.14;
+          g.add(this.makeLine(tx-ux*ml,ty-uy*ml, tx+ux*ml,ty+uy*ml, hex, 0.4*opacityMul));
+          g.add(this.makeLine(tx-tpx*1.8,ty-tpy*1.8, tx+tpx*1.8,ty+tpy*1.8, hex, 0.4*opacityMul));
+        }
+      }
+      const tag = key==='out' ? `${name}'` : name; // distinguish next-layer (raw) axis label from this layer's (followed) axis label
+      this.labelData.push({key, wx:ex+ux*0.3, wy:ey+uy*0.3, text:tag, color:css, ox:0, oy:0, alpha:opacityMul});
+    }
+    this.axisGroups[key] = g;
+    this.scene.add(g);
+  }
+
+  _disposeObject(object){
+    object.traverse(child => {
+      if(child.geometry) child.geometry.dispose();
+      if(child.material){
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach(material => material.dispose());
+      }
+    });
+  }
+
+  findNearestPoint(wx, wy, threshold){
+    let near=-1, minD=Infinity;
+    for(let i=0;i<this.points.length;i++){
+      const d = Math.hypot(this.points[i].ox-wx, this.points[i].oy-wy);
+      if(d<threshold && d<minD){minD=d; near=i;}
+    }
+    return near;
+  }
+
+  _initInteraction(){
+    const canvas = this.canvas;
+    let mode=null, panStart={x:0,y:0}, dragIndex=-1, downPos=null, didDrag=false;
+    const tip = document.createElement('div');
+    tip.style.cssText = 'position:fixed; background:#ffffffee; border:1px solid #c4c4c0; color:#2a2a2a; font-size:11px; padding:5px 9px; pointer-events:none; display:none; z-index:50;';
+    document.body.appendChild(tip);
+    this.tip = tip;
+
+    canvas.addEventListener('mousedown', e=>{
+      downPos={x:e.clientX,y:e.clientY}; didDrag=false;
+      const w2 = this.screenToWorld(e.offsetX, e.offsetY);
+      const th = 0.25/this.zoom;
+      if(e.button===2 || e.button===1){ mode='pan'; panStart={x:e.clientX,y:e.clientY}; e.preventDefault(); return; }
+      const near = this.findNearestPoint(w2.x, w2.y, th);
+      if(near>=0){ dragIndex=near; mode='drag-point'; }
+      else { mode='pan'; panStart={x:e.clientX,y:e.clientY}; }
+    });
+    canvas.addEventListener('mousemove', e=>{
+      if(mode==='pan' && downPos){
+        const dx=e.clientX-panStart.x, dy=e.clientY-panStart.y;
+        if(Math.abs(dx)>2||Math.abs(dy)>2) didDrag=true;
+        this.pan.x -= dx/this.W*2*this.aspect*this.VS/this.zoom;
+        this.pan.y += dy/this.H*2*this.VS/this.zoom;
+        panStart={x:e.clientX,y:e.clientY};
+        this.applyCamera();
+        this.renderer.render(this.scene, this.cam);
+        this.drawLabels();
+        return;
+      }
+      if(mode==='drag-point' && dragIndex>=0){
+        didDrag=true;
+        const w2 = this.screenToWorld(e.offsetX, e.offsetY);
+        this.points[dragIndex].ox=w2.x; this.points[dragIndex].oy=w2.y;
+        if(this.onPointsEdited) this.onPointsEdited();
+        return;
+      }
+      const w2 = this.screenToWorld(e.offsetX, e.offsetY);
+      const th = 0.25/this.zoom;
+      const near = this.findNearestPoint(w2.x, w2.y, th);
+      if(near>=0){
+        const p = this.points[near];
+        tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-8)+'px';
+        tip.textContent = `(${p.ox.toFixed(2)}, ${p.oy.toFixed(2)})`;
+        canvas.style.cursor='pointer';
+      } else {
+        tip.style.display='none';
+        canvas.style.cursor = mode==='pan' ? 'grabbing' : 'grab';
+      }
+    });
+    canvas.addEventListener('mouseup', e=>{
+      if(mode==='pan' && !didDrag && e.button===0){
+        const w2 = this.screenToWorld(e.offsetX, e.offsetY);
+        if(this.points.length < this.MAXN){
+          this.points.push({ ox:w2.x, oy:w2.y, gray: Math.random()<0.5 });
+          if(this.onPointsEdited) this.onPointsEdited();
+        }
+      } else if(mode==='drag-point' && !didDrag){
+        this.points.splice(dragIndex,1);
+        if(this.onPointsEdited) this.onPointsEdited();
+      }
+      mode=null; dragIndex=-1; downPos=null;
+    });
+    canvas.addEventListener('mouseleave', ()=>{ mode=null; dragIndex=-1; tip.style.display='none'; });
+    canvas.addEventListener('contextmenu', e=>e.preventDefault());
+    canvas.addEventListener('wheel', e=>{
+      e.preventDefault();
+      this.zoom = Math.max(0.2, Math.min(20, this.zoom*(e.deltaY>0?.88:1.14)));
+      this.applyCamera();
+      this.renderer.render(this.scene, this.cam);
+      this.drawLabels();
+    }, {passive:false});
+  }
+
+  dispose(){
+    this._disposeObject(this.scene);
+    this.renderer.dispose();
+    if(this.renderer.forceContextLoss) this.renderer.forceContextLoss();
+    if(this.tip) this.tip.remove();
+  }
+}
+
+/* ============================================================
+   LayerBox: controls (W, B, activation, follow toggle) for one
+   linear layer between an input SpacePanel and an output SpacePanel.
+   ============================================================ */
+let layerCounter = 0;
+
+class LayerBox {
+  constructor(container, inputPanel) {
+    this.id = ++layerCounter;
+    this.inputPanel = inputPanel;
+    this.currentAct = 'none';
+    this.lockedTargets = { w0:{x:1,y:0}, w1:{x:0,y:1} };
+
+    this.el = document.createElement('div');
+    this.el.className = 'layer-box';
+    this.el.innerHTML = `
+      <div class="layer-title"><span>layer ${this.id}</span><button class="removeLayer" title="remove this layer">✕</button></div>
+      <div class="ctrl-row">
+        <label>W</label>
+        <div class="matrix-input">
+          <input class="w00 c0" type="number" step="0.1" value="1">
+          <input class="w01 c1" type="number" step="0.1" value="0">
+          <input class="w10 c0" type="number" step="0.1" value="0">
+          <input class="w11 c1" type="number" step="0.1" value="1">
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <label>B</label>
+        <div class="bias-input">
+          <input class="b0" type="number" step="0.1" value="0">
+          <input class="b1" type="number" step="0.1" value="0">
+        </div>
+      </div>
+      <div class="ctrl-row" style="align-items:flex-start;">
+        <label>&sigma;</label>
+        <div class="act-group">
+          <button class="act-btn active" data-act="none">none</button>
+          <button class="act-btn" data-act="relu">relu</button>
+          <button class="act-btn" data-act="gelu">gelu</button>
+          <button class="act-btn" data-act="sigmoid">sigmoid</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="action randomWBtn">Random W</button>
+        <button class="action randomBBtn">Random B</button>
+      </div>
+      <div class="btn-row">
+        <button class="action resetBtn">Reset</button>
+      </div>
+    `;
+    container.appendChild(this.el);
+
+    this.q = sel => this.el.querySelector(sel);
+    this._wireEvents();
+  }
+
+  getW(){ const v=el=>parseFloat(el.value)||0; return [[v(this.q('.w00')),v(this.q('.w01'))],[v(this.q('.w10')),v(this.q('.w11'))]]; }
+  getB(){ const v=el=>parseFloat(el.value)||0; return [v(this.q('.b0')), v(this.q('.b1'))]; }
+  setW(w){ this.q('.w00').value=w[0][0]; this.q('.w01').value=w[0][1]; this.q('.w10').value=w[1][0]; this.q('.w11').value=w[1][1]; }
+  setB(b){ this.q('.b0').value=b[0]; this.q('.b1').value=b[1]; }
+
+  relockTargets(){
+    const w = this.getW();
+    this.lockedTargets = pickBestTargets({x:w[0][0],y:w[1][0]}, {x:w[0][1],y:w[1][1]});
+    if(this.outputPanel) this.outputPanel.lockedTargets = this.lockedTargets;
+  }
+
+  _wireEvents(){
+    const onInputChange = () => {
+      this.relockTargets();
+      this.notifyChange();
+    };
+    ['.w00','.w01','.w10','.w11','.b0','.b1'].forEach(sel=>{
+      this.q(sel).addEventListener('input', onInputChange);
+      this.q(sel).addEventListener('keydown', e=>{ if(e.key==='Enter') onInputChange(); });
+    });
+    this.el.querySelectorAll('.act-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        this.el.querySelectorAll('.act-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        this.currentAct = btn.dataset.act;
+        this.notifyChange();
+      });
+    });
+    this.q('.randomWBtn').addEventListener('click', ()=>{
+      const r=()=>Math.round((Math.random()*6-3)*10)/10;
+      this.setW([[r(),r()],[r(),r()]]);
+      this.relockTargets();
+      this.notifyChange();
+    });
+    this.q('.randomBBtn').addEventListener('click', ()=>{
+      const r=()=>Math.round((Math.random()*4-2)*10)/10;
+      this.setB([r(),r()]);
+      this.notifyChange();
+    });
+    this.q('.resetBtn').addEventListener('click', ()=>{
+      this.setW([[1,0],[0,1]]); this.setB([0,0]);
+      this.el.querySelectorAll('.act-btn').forEach(b=>b.classList.remove('active'));
+      this.el.querySelector('.act-btn[data-act="none"]').classList.add('active');
+      this.currentAct='none';
+      this.relockTargets();
+      this.notifyChange();
+    });
+    this.q('.removeLayer').addEventListener('click', ()=>{
+      if(this.onRemove) this.onRemove(this);
+    });
+  }
+
+  notifyChange(){ if(this.onChange) this.onChange(); }
+}
+
+/* ============================================================
+   Pipeline orchestration
+   ============================================================ */
+const track = document.getElementById('track');
+let chain = []; // array of { spacePanel, layerBox|null } in order; spacePanel[0] has layerBox=null
+let pipelineDirty = true;
+
+function buildArrow(){
+  const a = document.createElement('div');
+  a.className = 'arrow';
+  a.textContent = '→';
+  return a;
+}
+
+function relayout(){
+  // remove the floating add-button if present, re-add at end
+  const oldBtn = document.getElementById('addLayerBtn');
+  if(oldBtn) oldBtn.remove();
+  const oldArrows = track.querySelectorAll('.arrow');
+  // we rebuild arrows fresh each time layers change rather than tracking them individually
+}
+
+function cascadeSyncFrom(index){
+  pipelineDirty = true;
+  for(let i = index+1; i < chain.length; i++){
+    chain[i].spacePanel.syncFromLayer();
+  }
+}
+
+function rewireCascade(){
+  chain.forEach((entry, i) => {
+    entry.spacePanel.onPointsEdited = () => cascadeSyncFrom(i);
+    if(entry.layerBox) entry.layerBox.onChange = () => cascadeSyncFrom(i-1);
+  });
+}
+
+function addLayer(){
+  const prevIndex = chain.length - 1;
+  const prevPanel = chain[prevIndex].spacePanel;
+
+  track.appendChild(buildArrow());
+  const layerBox = new LayerBox(track, prevPanel);
+  track.appendChild(buildArrow());
+
+  const newPanel = new SpacePanel(track, { withAxes:false });
+  newPanel.layer = layerBox;
+  layerBox.outputPanel = newPanel;
+  prevPanel.outgoingLayer = layerBox;
+  newPanel.setLabel(`space ${chain.length}`);
+  newPanel.syncFromLayer();
+
+  layerBox.onRemove = (lb) => removeLayer(lb);
+
+  chain.push({ spacePanel: newPanel, layerBox });
+  rewireCascade();
+  appendAddButton();
+  resizeAll();
+}
+
+function removeLayer(layerBox){
+  const idx = chain.findIndex(c => c.layerBox === layerBox);
+  if(idx <= 0) return; // safety: never remove the input panel itself
+  chain[idx-1].spacePanel.outgoingLayer = null;
+  for(let i = chain.length-1; i >= idx; i--){
+    chain[i].spacePanel.dispose();
+    chain[i].spacePanel.el.remove();
+    if(chain[i].layerBox) chain[i].layerBox.el.remove();
+  }
+  chain = chain.slice(0, idx);
+  rebuildTrackDOM();
+  relabelSpaces();
+  rewireCascade();
+  resizeAll();
+}
+
+function relabelSpaces(){
+  chain.forEach((entry,i)=>{
+    if(i===0) entry.spacePanel.setLabel('input space (X)');
+    else if(i===chain.length-1) entry.spacePanel.setLabel('output space (Y)');
+    else entry.spacePanel.setLabel(`space ${i}`);
+  });
+}
+
+function rebuildTrackDOM(){
+  while(track.firstChild) track.removeChild(track.firstChild);
+  chain.forEach((entry, i) => {
+    if(i === 0){
+      track.appendChild(entry.spacePanel.el);
+    } else {
+      track.appendChild(buildArrow());
+      track.appendChild(entry.layerBox.el);
+      track.appendChild(buildArrow());
+      track.appendChild(entry.spacePanel.el);
+    }
+  });
+  appendAddButton();
+}
+
+function appendAddButton(){
+  const btn = document.createElement('button');
+  btn.id = 'addLayerBtn';
+  btn.textContent = '+';
+  btn.title = 'add layer';
+  btn.addEventListener('click', addLayer);
+  track.appendChild(buildArrow());
+  track.appendChild(btn);
+}
+
+function resizeAll(){
+  chain.forEach(entry => entry.spacePanel.resize());
+  pipelineDirty = true;
+}
+
+function init(){
+  const inputPanel = new SpacePanel(track, { withAxes:false });
+  inputPanel.setLabel('input space (X)');
+  chain.push({ spacePanel: inputPanel, layerBox: null });
+  appendAddButton();
+  addLayer(); // start with one layer so the concept is visible immediately
+  relabelSpaces();
+  resizeAll();
+}
+
+init();
+
+window.addEventListener('resize', resizeAll);
+
+(function animate(){
+  requestAnimationFrame(animate);
+  let animating = false;
+  chain.forEach((entry, index) => {
+    const p = entry.spacePanel;
+    const target = p.layer ? 1 : 0;
+    if(Math.abs(p.followT - target) > 0.0005){
+      animating = true;
+      p.followT += (target - p.followT) * 0.045;
+      if(Math.abs(p.followT - target) < 0.0008) p.followT = target;
+    }
+  });
+  if(!pipelineDirty && !animating) return;
+  chain.forEach((entry, index) => {
+    const p = entry.spacePanel;
+    // Synchronize in pipeline order so every downstream space reflects the
+    // exact animated state visible immediately to its left.
+    if(index > 0) p.syncFromLayer();
+    p.render();
+  });
+  pipelineDirty = false;
+})();
+</script>
+</body>
+</html>
