@@ -92,8 +92,8 @@ hr{
 
 .header-section{
   padding: 32px 20px 28px;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding-left: max(16px, 4vw);
+  padding-right: max(16px, 4vw);
   display: flex;
   gap: 0;
   border-bottom: 0.1px solid var(--border);
@@ -153,7 +153,7 @@ hr{
 
 .tagline{
   font-size: var(--size-lead);
-  font-weight: 700;
+  font-weight: 400;
   margin: 10px 0 10px;
   color: var(--text);
 }
@@ -162,6 +162,9 @@ hr{
   color: var(--text);
 }
 .bio strong{ font-weight: 700; }
+.dim{
+  opacity: 0.6;
+}
 
 .email-btn{ position: relative; cursor: pointer; }
 .email-btn .tooltip{
@@ -201,10 +204,10 @@ hr{
 }
 
 .blog-middle{
-  flex: 0 1 40%;
+  flex: 0 1 var(--container);
   max-width: var(--container);
   margin: 0 auto;
-  padding: 28px 20px 56px;
+  padding: 28px clamp(16px, 4vw, 40px) 56px;
   height: 100%;
   overflow-x: hidden;
   max-width: 100%;
@@ -257,6 +260,9 @@ hr{
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
+.blog-entry{ width:100%; }
+.blog-entry > div{ overflow-wrap:anywhere; }
+
 #embed {
   width: 100%;
   height: 100%;
@@ -273,14 +279,47 @@ hr{
 }
 
 @media (max-width: 680px){
+  .header-section{ position:relative; padding-top:28px; }
+  .header-section > .middle-div{ position:relative; width:100%; }
+  .header-container{ position:relative; }
+  .mobile-conway{
+    display:block;
+    position:absolute;
+    top:0;
+    width:min(105px, calc((100vw - 174px) / 2));
+    height:225px;
+    pointer-events:none;
+    opacity:.82;
+  }
+  .mobile-conway-left{ right:calc(50% + 78px); }
+  .mobile-conway-right{ left:calc(50% + 78px); }
+  .mobile-conway canvas{ position:absolute; display:block; }
+  .profile-image{ width:150px; height:150px; }
+  .header-content{ width:100%; }
+  .links{ display:flex; flex-wrap:wrap; gap:8px 0; align-items:center; justify-content:center; }
+  .separator{ margin:0 5px; }
+  .tagline{ font-size:1rem; }
+  .bio{ font-size:.95rem; line-height:1.65; }
+  .blog-section{ padding-top:20px; min-height:0; }
+  .blog-middle{ padding:20px 16px 40px; }
+  .blog-middle > h1{ font-size:clamp(25px, 8vw, 40px) !important; line-height:1.15 !important; }
+  .notion-page-content{ font-size:14px !important; letter-spacing:.025em !important; }
   .header-container{
     flex-direction: column;
     align-items: center;
     text-align: center;
   }
   .name{ font-size: clamp(30px, 8vw, 40px); }
-  .links{ justify-content: center; }
 }
+
+@media (max-width: 360px){
+  .mobile-conway{ width:64px; height:215px; }
+  .mobile-conway-left{ right:calc(50% + 78px); }
+  .mobile-conway-right{ left:calc(50% + 78px); }
+}
+
+.mobile-conway{ display:none; }
+@media (max-width:680px){ .mobile-conway{ display:grid; } }
 
 footer{
   margin-top: 36px;
@@ -298,7 +337,11 @@ footer{
   </div>
   <div class="middle-div">
     <div class="header-container">
-      <img class="profile-image" alt="profile photo" src="assets/my_pic.jpeg">
+      <div class="mobile-conway mobile-conway-left" aria-hidden="true">
+      </div>
+      <img class="profile-image" alt="Dhia Naouali" src="assets/my_pic.png">
+      <div class="mobile-conway mobile-conway-right" aria-hidden="true">
+      </div>
       <div class="header-content">
         <h1 class="name">Dhia naouali</h1>
         <div class="links">
@@ -311,24 +354,16 @@ footer{
           <a target="_blank" href="https://www.linkedin.com/in/dhia-12-naouali/">LINKEDIN</a>
           <span class="separator">|</span>
           <a class="pink-link" target="_blank" href="https://x.com/Dhia_naouali_">TWITTER/X</a>
-          <span class="separator">|</span>
-          <a target="_blank" href="https://calendly.com/dhia12naouali/20-mins-call">CALENDLY</a> 
-
-          
         </div>
-        <p class="tagline">
-          Penultimate year Software Engineering student, 
+        <p class="bio">
+          Final-year SWE student <span class="dim">(integrated undergrad/Master's)</span> 
         </p>
         <p class="bio">
-          Deep into vision: mech interp, SSL, generative models, compression, foundation models...
-          <br>
-          Gravitating toward world models and RL. 
-          <br>
-          Often curiously deep-diving papers and repos, high-level theory down to PyTorch/ JAX implementation and optimization.
-
+	        Research interests: <strong>representation learning and vision</strong>, modeling and understanding emergent structure in learned representations (SSL, diffusion, ...), with broader interest in world models and RL.
           <br><br>
-	
-          <p class="tagline"> Looking for a research internship.</p>
+          self-tought from papers, talks, blogs and repos
+          <br>	
+          <p class="tagline"> Looking for a <strong>thesis research internship</strong> starting around <strong>February</strong>(preferred) - April 2027</p>
         </p>
       </div>
     </div>
@@ -522,6 +557,48 @@ window.addEventListener("DOMContentLoaded", () => {
     showDead: true,
     animationSpeed: 2400,
     toroidal: false
+  });
+
+  const mobilePalettes = [
+    ["rgba(86,148,105,.82)", "rgba(220,84,84,.48)"],
+    ["rgba(220,84,84,.76)", "rgba(20,108,195,.42)"],
+    ["rgba(20,108,195,.72)", "rgba(126,158,115,.48)"],
+    ["rgba(180,105,190,.72)", "rgba(235,145,68,.45)"]
+  ];
+  const mobilePatterns = [conway.patterns.glider, conway.patterns.toad, conway.patterns.blinker];
+  let mobileId = 0;
+  document.querySelectorAll('.mobile-conway').forEach((cluster) => {
+    const count = 3 + Math.floor(Math.random() * 4);
+    for (let j = 0; j < count; j++) {
+      const canvas = document.createElement('canvas');
+      const id = 'mobile-conway-' + mobileId++;
+      const size = 30 + Math.floor(Math.random() * 27);
+      canvas.id = id;
+      canvas.style.width = size + 'px';
+      canvas.style.height = (size + Math.floor(Math.random() * 18)) + 'px';
+      canvas.style.left = Math.floor(Math.random() * 58) + '%';
+      canvas.style.top = Math.floor(Math.random() * 172) + 'px';
+      canvas.style.transform = `translateX(-${Math.floor(Math.random() * 45)}%) rotate(${Math.floor(Math.random() * 13) - 6}deg)`;
+      canvas.style.opacity = String(.55 + Math.random() * .4);
+      cluster.appendChild(canvas);
+
+      const palette = mobilePalettes[Math.floor(Math.random() * mobilePalettes.length)];
+      const mobileGame = conway.conway(id, {
+        cellSize: 4 + Math.floor(Math.random() * 3),
+        gridWidth: 10,
+        gridHeight: 12,
+        backgroundColor: "rgba(252,252,255,0)",
+        cellColor: palette[0],
+        deadCellColor: palette[1],
+        showGrid: false,
+        showDead: true,
+        animationSpeed: 1300 + Math.floor(Math.random() * 1700),
+        toroidal: Math.random() > .5
+      });
+      mobileGame.place(mobilePatterns[Math.floor(Math.random() * mobilePatterns.length)], 2, 3);
+      if (Math.random() > .82) mobileGame.randomize(.18 + Math.random() * .2);
+      mobileGame.start();
+    }
   });
 
   let geta3 = []

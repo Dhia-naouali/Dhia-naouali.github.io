@@ -17,7 +17,7 @@
   --btnh:#eeebe4;
   --gc:rgba(0,0,0,.038);
 }
-@media(prefers-color-scheme:dark){
+@media(prefers-color-scheme:dark) and (min-width:99999px){
   :root{
     --bg:#131311;
     --surface:#1c1c19;
@@ -30,6 +30,20 @@
     --gc:rgba(255,255,255,.03);
   }
 }
+/* Keep this interactive consistent with the light desktop presentation. */
+@media(prefers-color-scheme:dark) and (min-width:99999px){
+  :root{
+    --bg:#f5f4f0;
+    --surface:#ffffff;
+    --border:rgba(0,0,0,.08);
+    --text:#1a1a18;
+    --muted:#88887e;
+    --red:#c82020;
+    --btn:#ffffff;
+    --btnh:#eeebe4;
+    --gc:rgba(0,0,0,.038);
+  }
+}
 /* SWAPPED: body gets the "scene box" color, canvas gets the former background */
 body{
   background:var(--surface);
@@ -38,8 +52,9 @@ body{
   display:flex;
   justify-content:center;
   padding:24px 16px 32px;
+  color-scheme:light !important;
 }
-.wrap{width:100%;max-width:960px}
+.wrap{width:100%;max-width:none}
 canvas{
   width:100%;
   display:block;
@@ -71,6 +86,16 @@ button{
   font-family:inherit;
   transition:background .1s;
   outline:none;
+}
+/* This illustration is always light and scales to its containing viewport. */
+html, body { background:#fff !important; color:#1a1a18 !important; color-scheme:light !important; }
+canvas { width:100% !important; height:auto !important; background:#f5f4f0 !important; }
+.ctrl { width:100%; max-width:100%; }
+@media (max-width:520px){
+  body{padding:8px 4px 12px}
+  .ctrl{gap:3px; justify-content:flex-start; flex-wrap:nowrap}
+  button{padding:3px 4px; font-size:8px; white-space:nowrap}
+  .sep{margin:0 0}
 }
 button:hover{background:var(--btnh)}
 button.on{background:var(--red);color:#fff;border-color:var(--red)}

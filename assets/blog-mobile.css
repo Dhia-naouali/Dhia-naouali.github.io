@@ -1,0 +1,383 @@
+/* Shared responsive polish for static Notion exports. */
+html, body { width:100% !important; max-width:100vw !important; overflow-x:hidden !important; }
+body { min-width:0 !important; }
+.site-home-link {
+  position:sticky;
+  top:8px;
+  z-index:10000;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  width:auto;
+  min-height:28px;
+  margin:8px 0 0 12px;
+  padding:5px 10px 5px 9px;
+  border:.35px solid rgba(0,0,0,.10);
+  border-radius:999px;
+  background:#f5f4f0;
+  box-shadow:none;
+  color:#1a1a18 !important;
+  font:600 11px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  letter-spacing:.04em;
+  text-transform:none;
+  text-decoration:none !important;
+}
+.site-home-link::before {
+  content:"";
+  width:14px;
+  height:10px;
+  flex:0 0 14px;
+  background:center / 14px 10px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10' fill='none'%3E%3Cpath d='M13.25 5H1.5M1.5 5l3.5-3.5M1.5 5l3.5 3.5' stroke='%231a1a18' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.site-home-link:hover { color:#c82020 !important; }
+.notion-sidebar, .notion-sidebar-container, [class*="notion-sidebar"] { display:none !important; width:0 !important; }
+.notion-app-inner, .notion-cursor-listener, .notion-frame, .notion-scroller { width:100% !important; max-width:100% !important; margin-inline:0 !important; }
+.notion-frame, .notion-scroller { min-height:100vh !important; height:auto !important; max-height:none !important; overflow-y:visible !important; overflow-x:hidden !important; }
+.layout { grid-template-columns: [full-start] 1fr [content-start] min(900px, calc(100% - 32px)) [content-end] 1fr [full-end] !important; }
+/* Let desktop notes with real two-column blocks breathe.  The phone media
+   rules below still flatten these blocks into one column. */
+@media (min-width:1001px) {
+  body:has(.notion-column_list-block) .layout {
+    grid-template-columns:[full-start] 1fr [content-start] min(1400px, calc(100% - 64px)) [content-end] 1fr [full-end] !important;
+  }
+}
+img, video, iframe, svg { max-width:100%; height:auto; }
+pre, code { max-width:100%; overflow-x:auto; }
+/* Article figures: scale down to the viewport instead of cropping their center. */
+.notion-image-block, .notion-image-block > div, .notion-image-block figure {
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+}
+.notion-image-block img {
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  height:auto !important;
+  max-height:none !important;
+  object-fit:contain !important;
+  object-position:center !important;
+}
+@media (max-width:1000px) {
+  body .notion-frame {
+    padding-left:0 !important;
+    padding-right:0 !important;
+  }
+  /* Keep every article on the same 16px phone gutter as World Models. */
+  body .layout {
+    width:100vw !important;
+    max-width:100vw !important;
+    margin:0 !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
+    grid-template-columns:[full-start] 0 [content-start] minmax(0, 1fr) [content-end] 0 [full-end] !important;
+    overflow:visible !important;
+  }
+  body .layout > .pseudoSelection,
+  body .whenContentEditable,
+  body .notion-selectable-container {
+    width:100% !important;
+    max-width:100% !important;
+    overflow:visible !important;
+  }
+  body .notion-scroller > div.whenContentEditable,
+  body .notion-scroller > div:not(.notion-page-content) {
+    width:100vw !important;
+    max-width:100vw !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
+    box-sizing:border-box !important;
+  }
+  .layout-content, .layout-full { min-width:0 !important; width:100% !important; }
+  .layout-margin-right,
+  .notion-floating-table-of-contents,
+  .notion-peek-renderer,
+  .notion-presence-container {
+    display:none !important;
+  }
+  .notion-column_list-block {
+    display:block !important;
+    width:100% !important;
+  }
+  .notion-column_list-block > div {
+    display:block !important;
+    width:100% !important;
+    padding-block:0 !important;
+  }
+  .notion-column-block {
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+  .notion-page-content, .notion-page-content-inner,
+  .notion-scroller > div:not(.notion-page-content) {
+    width:100% !important;
+    max-width:100% !important;
+    margin-inline:0 !important;
+    padding-inline:16px !important;
+    box-sizing:border-box !important;
+  }
+  body .layout-content {
+    width:100vw !important;
+    max-width:100vw !important;
+    margin-left:calc(50% - 50vw) !important;
+    margin-right:0 !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
+    box-sizing:border-box !important;
+  }
+  .notion-page-content * {
+    min-width:0 !important;
+    max-width:100% !important;
+    overflow-wrap:anywhere !important;
+  }
+  .notion-page-content pre,
+  .notion-page-content code,
+  .notion-page-content .notion-code-block {
+    white-space:pre-wrap !important;
+    overflow-x:auto !important;
+    word-break:break-word !important;
+  }
+  .notion-page-content .katex-display,
+  .notion-page-content .katex {
+    max-width:100% !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+  }
+  .notion-page-content [data-content-editable-leaf="true"]:empty {
+    display:none !important;
+  }
+  .notion-page-content [data-content-editable-leaf="true"]:empty + * {
+    display:none !important;
+  }
+  .notion-page-cover-wrapper, .notion-page-cover {
+    height:auto !important;
+    max-height:none !important;
+  }
+  .layout-full:has(.notion-page-cover),
+  .notion-page-cover-wrapper,
+  .notion-page-cover {
+    width:100vw !important;
+    max-width:100vw !important;
+    margin-left:calc(50% - 50vw) !important;
+    margin-right:0 !important;
+    padding-inline:0 !important;
+  }
+  .notion-page-cover img,
+  .notion-page-cover-wrapper img {
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    object-fit:contain !important;
+    object-position:center !important;
+  }
+  /* Exported cover wrappers often keep their desktop grid offset. */
+  body .notion-page-cover-wrapper,
+  body .notion-page-cover,
+  body [class*="page-cover"] {
+    position:relative !important;
+    left:50% !important;
+    right:auto !important;
+    transform:translateX(-50%) !important;
+    width:100vw !important;
+    max-width:100vw !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+  /* Static exports also encode the article banner as the first layout-full
+     block, without a cover class. Make that real structure fluid too. */
+  body .layout > .layout-full:first-of-type {
+    position:relative !important;
+    left:50% !important;
+    width:100vw !important;
+    max-width:100vw !important;
+    height:auto !important;
+    max-height:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    transform:translateX(-50%) !important;
+  }
+  body .layout > .layout-full:first-of-type img {
+    display:block !important;
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    object-fit:contain !important;
+    object-position:center !important;
+  }
+  body .layout > .pseudoSelection > .layout-full {
+    position:relative !important;
+    left:50% !important;
+    width:100vw !important;
+    max-width:100vw !important;
+    height:auto !important;
+    max-height:none !important;
+    margin:0 !important;
+    margin-bottom:0 !important;
+    padding:0 !important;
+    transform:translateX(-50%) !important;
+  }
+  body .layout > .pseudoSelection > .layout-full img {
+    display:block !important;
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    object-fit:contain !important;
+    object-position:50% 50% !important;
+  }
+  body .layout > .pseudoSelection > .layout-content {
+    margin-top:0 !important;
+    padding-top:0 !important;
+  }
+  body .layout > .pseudoSelection > .layout-full > div,
+  body .layout > .pseudoSelection > .layout-full > div > div,
+  body .layout > .pseudoSelection > .layout-full > div > div > div {
+    height:auto !important;
+    max-height:none !important;
+    min-height:0 !important;
+    overflow:visible !important;
+  }
+  body .layout .layout-full img {
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    object-fit:contain !important;
+    object-position:center !important;
+  }
+  body .layout .layout-full > div,
+  body .layout .layout-full > div *:not(img) {
+    height:auto !important;
+    max-height:none !important;
+    min-height:0 !important;
+  }
+  body .layout .layout-full {
+    position:relative !important;
+    left:0 !important;
+    width:calc(100% + 48px) !important;
+    max-width:calc(100% + 48px) !important;
+    height:auto !important;
+    max-height:none !important;
+    margin:0 !important;
+    margin-left:-48px !important;
+    padding:0 !important;
+    transform:none !important;
+  }
+  body .layout .layout-full *:not(img) {
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+  }
+  body .layout .layout-full img {
+    position:relative !important;
+    left:0 !important;
+    transform:none !important;
+  }
+  body img[style*="30vh"] {
+    display:block !important;
+    width:100vw !important;
+    max-width:100vw !important;
+    height:auto !important;
+    max-height:none !important;
+    object-fit:contain !important;
+    object-position:center !important;
+    margin:0 !important;
+    position:relative !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+  }
+  body div:has(> img[style*="30vh"]) {
+    width:100vw !important;
+    max-width:100vw !important;
+    height:auto !important;
+    max-height:none !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+  body .layout .layout-full + .layout-content {
+    margin-top:0 !important;
+    padding-top:0 !important;
+  }
+  body .layout .layout-full img[style*="30vh"] {
+    width:100% !important;
+    max-width:100% !important;
+    left:0 !important;
+    transform:none !important;
+  }
+  body .layout .layout-full {
+    width:100vw !important;
+    max-width:100vw !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+  }
+  body .layout .layout-full img[style*="30vh"] {
+    width:100% !important;
+    max-width:100% !important;
+  }
+  body .layout > .layout-full:first-of-type > div,
+  body .layout > .layout-full:first-of-type > div > div,
+  body .layout > .layout-full:first-of-type > div > div > div {
+    height:auto !important;
+    max-height:none !important;
+    min-height:0 !important;
+    overflow:visible !important;
+  }
+  h1 {
+    width:100% !important;
+    max-width:none !important;
+    font-size:clamp(28px, 9vw, 42px) !important;
+    line-height:1.15 !important;
+    letter-spacing:-.035em !important;
+    white-space:normal !important;
+    word-break:normal !important;
+    overflow-wrap:normal !important;
+    hyphens:none !important;
+  }
+  h2 { font-size:clamp(22px, 7vw, 32px) !important; }
+  table { display:block; max-width:100%; overflow-x:auto; }
+  .notion-image-block { margin-inline:0 !important; }
+  /* Responsive embeds (including the World Models interactive): the export
+     uses an absolute iframe inside a fixed-height wrapper on desktop. */
+  .notion-embed-block,
+  .notion-embed-block > div,
+  .notion-embed-block [role="figure"],
+  .notion-embed-block [role="figure"] > div,
+  .notion-embed-block [role="figure"] > div > div {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+  }
+  .notion-embed-block {
+    width:calc(100vw - 32px) !important;
+    max-width:calc(100vw - 32px) !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    transform:translateX(0) !important;
+  }
+  .notion-embed-block [role="figure"] {
+    /* Canvas (960x490) plus the controls below it. */
+    aspect-ratio:16 / 9.8;
+    position:relative !important;
+    overflow:hidden !important;
+  }
+  .notion-embed-block iframe {
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+  }
+  .notion-embed-block [role="figure"] * {
+    max-width:100% !important;
+  }
+  .notion-embed-block [role="figure"] > div,
+  .notion-embed-block [role="figure"] > div > div,
+  .notion-embed-block [role="figure"] > div > div > div {
+    display:block !important;
+    width:100% !important;
+  }
+}
