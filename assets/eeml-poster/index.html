@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Perceptually Controversial Latents — EEML Poster</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; height: 100%; width: 100%;
+      background: transparent;
+      overflow: hidden; touch-action: none;
+    }
+    body { display: flex; align-items: center; justify-content: center; }
+    #stage {
+      width: 100%; height: 100%; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .poster {
+      display: block;
+      width: 100%; height: 100%;
+      max-width: 100%; max-height: 100%;
+      flex: 0 0 auto;
+      aspect-ratio: 2383.94 / 3370.39;
+      object-fit: contain;
+      background: #fff;
+      transform-origin: center center;
+      will-change: transform;
+      cursor: zoom-in;
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <img class="poster" id="poster-img" src="poster.png" alt="Perceptually Controversial Latents research poster" draggable="false">
+
+  </div>
+
+  <script>
+    const img = document.getElementById('poster-img');
+    const stage = document.getElementById('stage');
+
+    function zoomParent(kind, value) {
+      if (window.parent !== window && typeof window.parent.eemlBoxZoom === 'function') {
+        window.parent.eemlBoxZoom(kind, value);
+      }
+    }
+
+    // Forward gestures to the parent so the complete box zooms as one object.
+    stage.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      zoomParent('wheel', e.deltaY);
+    }, { passive: false });
+
+    let pinchStartDist = null;
+    function dist(t0, t1){
+      return Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+    }
+    stage.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        pinchStartDist = dist(e.touches[0], e.touches[1]);
+      }
+    }, { passive: false });
+    stage.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (e.touches.length === 2 && pinchStartDist) {
+        const d = dist(e.touches[0], e.touches[1]);
+        zoomParent('pinch', d / pinchStartDist);
+        pinchStartDist = d;
+      }
+    }, { passive: false });
+    stage.addEventListener('touchend', () => { pinchStartDist = null; });
+
+    img.addEventListener('dblclick', () => {
+      zoomParent('reset');
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 
+
+
+
+
+
+
+<div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Jul-2026.</strong> Presented "Perceptually Controversial Latents" as a poster at <strong>EEML'26</strong> summer school. <a href="assets/eeml-poster/index.html" onclick="openPoster(event)" style="text-decoration:underline;">[poster]</a></div>
+
+<div id="poster-modal" onclick="if(event.target===this) closePoster()" style="
+  display:none; position:fixed; inset:0; z-index:50;
+  background: rgba(17,20,24,0.75);
+  align-items:center; justify-content:center; padding: 6px;">
+
+  <div style="
+    position:relative; height:96vh;
+    width: calc(96vh * (2383.94 / 3370.39) * 1.2);
+    max-width: 96vw;
+    background: var(--bg); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow:hidden;">
+
+    <button onclick="closePoster()" aria-label="Close" style="
+      position:absolute; top:8px; right:8px; z-index:2;
+      background: rgba(0,0,0,0.55); border:none; cursor:pointer;
+      width:28px; height:28px; border-radius:50%;
+      color:#fff; font-size:18px; line-height:1; font-weight:700;">&times;</button>
+
+    <iframe src="" id="poster-iframe" style="width:100%; height:100%; border:none;"></iframe>
+  </div>
+</div>
+
+<script>
+function blockOuterZoom(e){
+  // block ctrl/pinch-zoom and multi-touch gestures unless they're happening
+  // inside the iframe itself (a separate document, so this only ever fires
+  // for gestures over the backdrop/card chrome)
+  if (e.ctrlKey || (e.touches && e.touches.length > 1)) {
+    e.preventDefault();
+  }
+}
+function openPoster(e){
+  e.preventDefault();
+  document.getElementById('poster-iframe').src = 'assets/eeml-poster/index.html';
+  document.getElementById('poster-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', posterEscHandler);
+  document.addEventListener('wheel', blockOuterZoom, { passive: false });
+  document.addEventListener('touchmove', blockOuterZoom, { passive: false });
+}
+function closePoster(){
+  document.getElementById('poster-modal').style.display = 'none';
+  document.getElementById('poster-iframe').src = '';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', posterEscHandler);
+  document.removeEventListener('wheel', blockOuterZoom);
+  document.removeEventListener('touchmove', blockOuterZoom);
+}
+function posterEscHandler(e){
+  if (e.key === 'Escape') closePoster();
+}
+</script>
+  
+ -->

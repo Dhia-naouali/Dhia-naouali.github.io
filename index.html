@@ -181,9 +181,8 @@ hr{
 
 .blog-section{
   background: var(--bg);
-  display: flex; 
-  justify-content: center; 
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, min(calc(100% - 240px), var(--container))) minmax(0, 1fr);
   height: auto;
   min-height: 800px;
   overflow-x: hidden;
@@ -192,7 +191,7 @@ hr{
 }
 
 .blog-side{
-  width: 20%;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(8, 1fr);
@@ -204,9 +203,8 @@ hr{
 }
 
 .blog-middle{
-  flex: 0 1 var(--container);
-  max-width: var(--container);
-  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
   padding: 28px clamp(16px, 4vw, 40px) 56px;
   height: 100%;
   overflow-x: hidden;
@@ -273,6 +271,7 @@ hr{
 /* ===== Responsive ===== */
 @media (max-width: 920px){
   .side-div, .blog-side{ display:none; }
+  .blog-section{ grid-template-columns: minmax(0, 1fr); }
   .header-container{ gap: 18px; }
   .profile-image{ width: 132px; height: 132px; }
   .blog-middle{ padding-top: 22px; }
@@ -327,6 +326,143 @@ footer{
   color: var(--muted);
   font-size: 13px;
 }
+
+.eeml-poster-link{ text-decoration: underline; text-underline-offset: 3px; }
+.eeml-poster-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  overflow: hidden;
+  touch-action: none;
+  background: rgba(22, 25, 29, .66);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.eeml-poster-modal[hidden]{ display: none; }
+.eeml-paper{
+  --box-color: #faf9f4;
+  --box-depth: 48px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(calc(100vw - var(--box-depth) - 44px), calc(70.73vh - 51px), 760px);
+  height: auto;
+  padding: 50px 38px 36px;
+  background-color: var(--box-color);
+  background-image:
+    radial-gradient(circle, rgba(72, 63, 44, .09) 0 .8px, transparent 1.4px),
+    radial-gradient(circle, rgba(255,255,255,.5) 0 .7px, transparent 1.3px),
+    repeating-linear-gradient(2deg, transparent 0 7px, rgba(82, 70, 45, .035) 8px 9px),
+    repeating-linear-gradient(91deg, transparent 0 13px, rgba(125, 108, 75, .018) 14px 15px);
+  background-size: 19px 23px, 27px 31px, auto, auto;
+  border: 1px solid #34312c;
+  border-radius: 1px;
+  box-shadow: 30px 34px 32px rgba(0,0,0,.24), 0 38px 80px rgba(0,0,0,.3);
+  transform: translate(-24px, 24px);
+  cursor: zoom-in;
+}
+.eeml-paper::before{
+  content: "";
+  position: absolute;
+  top: calc(var(--box-depth) * -1);
+  right: calc(var(--box-depth) * -1);
+  bottom: 0;
+  width: var(--box-depth);
+  background-color: #eeeae0;
+  background-image: inherit;
+  background-size: inherit;
+  border: 0;
+  clip-path: polygon(0 var(--box-depth), 100% 0, 100% calc(100% - var(--box-depth)), 0 100%);
+  filter: drop-shadow(0 0 .55px #34312c);
+  pointer-events: none;
+}
+.eeml-paper::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  right: calc(var(--box-depth) * -1);
+  top: calc(var(--box-depth) * -1);
+  height: var(--box-depth);
+  background-color: #f3f0e8;
+  background-image: inherit;
+  background-size: inherit;
+  border: 0;
+  clip-path: polygon(0 100%, var(--box-depth) 0, 100% 0, calc(100% - var(--box-depth)) 100%);
+  filter: drop-shadow(0 0 .55px #34312c);
+  pointer-events: none;
+}
+.eeml-poster-window{
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2383.94 / 3370.39;
+  background: transparent;
+}
+.eeml-poster-iframe{
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+.eeml-poster-qr-link{
+  position: absolute;
+  z-index: 10;
+  top: 1.2%;
+  left: 90.3%;
+  width: 7.8%;
+  height: 5.7%;
+  display: block;
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+  background: transparent;
+}
+.eeml-poster-qr-link:focus-visible{
+  outline: 2px dashed #ffe56f;
+  outline-offset: 2px;
+}
+.eeml-poster-note{
+  position: absolute;
+  top: 4px;
+  right: 12px;
+  z-index: 3;
+  width: 54px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: #28251d;
+  background: #ffe56f;
+  background-image:
+    linear-gradient(145deg, rgba(255,255,255,.18), transparent 55%, rgba(128,94,0,.045));
+  background-size: auto;
+  border: 1px solid rgba(80,65,10,.2);
+  box-shadow: 1px 1.5px 2px rgba(0,0,0,.11);
+  transform: rotate(-8deg) skew(-2deg, 1deg);
+  font: 300 27px/1 "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-style: italic;
+  letter-spacing: -2px;
+}
+body.eeml-poster-open{ overflow: hidden; }
+@media (max-width: 600px){
+  .eeml-poster-modal{ padding: 12px; }
+  .eeml-paper{
+    --box-depth: 38px;
+    width: min(calc(100vw - var(--box-depth) - 24px), calc(70.73vh - 37px));
+    height: auto;
+    padding: 34px 24px 24px;
+    transform: translate(-19px, 19px);
+  }
+  .eeml-poster-note{ top: -4px; right: 7px; width: 46px; height: 40px; font-size: 22px; }
+}
+
 </style>
 </head>
 <body>
@@ -382,18 +518,27 @@ footer{
 
 <h1 style="color: #111418; font-weight: 700; line-height: 1.2; font-size: 36px; font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; margin: 0 0 10px 0;">News</h1>
 <div style="font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; font-size: 14px; letter-spacing: 0.055em; line-height: 1.6; width: 100%; margin-bottom: 32px;">
-  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Sep-2026.</strong> Serving as a reviewer for a <strong>NeurIPS'26</strong> workshop.</div>
+  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Sep-26.</strong> Serving as a reviewer for a <strong>NeurIPS'26</strong> workshop.</div>
 
   <div style="padding: 2px 2px; margin-bottom: 10px; display:flex; align-items:flex-start; gap:6px;">
-  <strong style="flex-shrink:0;">Aug-2026.</strong>
+  <strong style="flex-shrink:0;">Aug-26.</strong>
   <span>"VLCP: Vision Language Control Policy Closed-Loop Code Replanning for Robot Manipulation" <a href="https://arxiv.org/abs/2608.16978" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">[arXiv]</a> <br><span style="opacity: 0.7;"> &nbsp;<u style="text-underline-offset: 4px;">D. Naouali</u>, M. Wu, C. Wong, A. Puthran, O. G. Younis</span>          , accepted @ EMR Workshop, <strong>ECCV'26</strong>.</span>
 </div>
 
-  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Jul-2026.</strong> Presented "Perceptually Controversial Latents" as a poster at <strong>EEML'26</strong> summer school. 
-    <!-- <a href="#" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">[poster]</a> -->
+  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Jul-26.</strong> Presented "Perceptually Controversial Latents" as a poster at <strong>EEML'26</strong> summer school.
+    <a class="eeml-poster-link" href="assets/eeml-poster/index.html" data-eeml-poster-open>[poster]</a>
   </div>
-  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Mar-2026.</strong> Ranked 4th in the <strong>ICLR'26</strong> Re-Align Challenge; solution presented as a poster. <a target="_blank" href="https://representational-alignment.github.io/2026/challenge/blog/sub-04/" style="text-decoration:underline;">[blog]</a></div>
-  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Nov-2025.</strong> Ranked 13th (top 1.1%) in the <strong>NeurIPS'25</strong> EEG Foundations Challenge  as team <u style="text-underline-offset: 4px;">return_sota</u>.</div>
+  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Mar-26.</strong> Ranked 4th in the <strong>ICLR'26</strong> Re-Align Challenge; solution presented as a poster. <a target="_blank" href="https://representational-alignment.github.io/2026/challenge/blog/sub-04/" style="text-decoration:underline;">[blog]</a></div>
+  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Nov-25.</strong> Ranked 13th (top 1.1%) in the <strong>NeurIPS'25</strong> EEG Foundations Challenge  as team <u style="text-underline-offset: 4px;">return_sota</u>.</div>
+</div>
+<div class="eeml-poster-modal" id="eeml-poster-modal" role="dialog" aria-modal="true" aria-label="EEML poster 65" hidden>
+  <div class="eeml-paper">
+    <span class="eeml-poster-note" aria-label="Poster number 65">65</span>
+    <div class="eeml-poster-window">
+      <iframe class="eeml-poster-iframe" title="Perceptually Controversial Latents poster" data-src="assets/eeml-poster/index.html"></iframe>
+      <a class="eeml-poster-qr-link" href="https://github.com/Dhia-naouali/Perceptually-Controversial-Latents" target="_blank" rel="noopener noreferrer" aria-label="Open the Perceptually Controversial Latents GitHub repository"></a>
+    </div>
+  </div>
 </div>
 <div style="text-align:left; padding: 2px 2px; font-size:20px; font-weight:500; color: var(--text); margin: -36px 36px 10px;">&#8942;</div>
 <br>
@@ -685,6 +830,217 @@ window.addEventListener("DOMContentLoaded", () => {
     get3a.start();
   }
 });
+</script>
+<script>
+(() => {
+  const modal = document.getElementById('eeml-poster-modal');
+  const opener = document.querySelector('[data-eeml-poster-open]');
+  const iframe = modal.querySelector('.eeml-poster-iframe');
+  const paper = modal.querySelector('.eeml-paper');
+  const note = modal.querySelector('.eeml-poster-note');
+  let boxScale = 1;
+  let boxTargetScale = 1;
+  let boxZoomFrame = 0;
+  let boxPanX = 0;
+  let boxPanY = 0;
+  let boxMetrics = null;
+  let zoomAnchor = null;
+
+  function readPixels(style, property) {
+    return parseFloat(style[property]) || 0;
+  }
+
+  function captureBoxMetrics() {
+    const paperStyle = getComputedStyle(paper);
+    const noteStyle = getComputedStyle(note);
+    boxMetrics = {
+      width: paper.getBoundingClientRect().width,
+      height: paper.getBoundingClientRect().height,
+      depth: parseFloat(paperStyle.getPropertyValue('--box-depth')),
+      paddingTop: readPixels(paperStyle, 'paddingTop'),
+      paddingRight: readPixels(paperStyle, 'paddingRight'),
+      paddingBottom: readPixels(paperStyle, 'paddingBottom'),
+      paddingLeft: readPixels(paperStyle, 'paddingLeft'),
+      noteWidth: readPixels(noteStyle, 'width'),
+      noteHeight: readPixels(noteStyle, 'height'),
+      noteTop: readPixels(noteStyle, 'top'),
+      noteRight: readPixels(noteStyle, 'right'),
+      noteFontSize: readPixels(noteStyle, 'fontSize')
+    };
+  }
+
+  function applyBoxZoom(nextScale) {
+    const previousScale = boxScale;
+    boxScale = Math.min(2.5, Math.max(1, nextScale));
+    if (zoomAnchor) {
+      const ratio = boxScale / previousScale;
+      boxPanX = zoomAnchor.x - (zoomAnchor.x - boxPanX) * ratio;
+      boxPanY = zoomAnchor.y - (zoomAnchor.y - boxPanY) * ratio;
+    }
+    if (!boxMetrics) captureBoxMetrics();
+    const m = boxMetrics;
+    const depth = m.depth * boxScale;
+    paper.style.width = `${m.width * boxScale}px`;
+    paper.style.height = `${m.height * boxScale}px`;
+    paper.style.setProperty('--box-depth', `${depth}px`);
+    paper.style.padding = `${m.paddingTop * boxScale}px ${m.paddingRight * boxScale}px ${m.paddingBottom * boxScale}px ${m.paddingLeft * boxScale}px`;
+    applyBoxPosition(depth);
+    note.style.width = `${m.noteWidth * boxScale}px`;
+    note.style.height = `${m.noteHeight * boxScale}px`;
+    note.style.top = `${m.noteTop * boxScale}px`;
+    note.style.right = `${m.noteRight * boxScale}px`;
+    note.style.fontSize = `${m.noteFontSize * boxScale}px`;
+  }
+
+  function applyBoxPosition(depth = boxMetrics.depth * boxScale) {
+    const fullWidth = boxMetrics.width * boxScale + depth;
+    const fullHeight = boxMetrics.height * boxScale + depth;
+    const panAllowanceX = boxScale > 1 ? modal.clientWidth * .08 : 0;
+    const panAllowanceY = boxScale > 1 ? modal.clientHeight * .18 : 0;
+    const maxPanX = Math.max(0, (fullWidth - modal.clientWidth) / 2) + panAllowanceX;
+    const maxPanY = Math.max(0, (fullHeight - modal.clientHeight) / 2) + panAllowanceY;
+    boxPanX = Math.min(maxPanX, Math.max(-maxPanX, boxPanX));
+    boxPanY = Math.min(maxPanY, Math.max(-maxPanY, boxPanY));
+    paper.style.transform = `translate(${-fullWidth / 2 + boxPanX}px, ${-(boxMetrics.height * boxScale - depth) / 2 + boxPanY}px)`;
+  }
+
+  function requestBoxZoom(nextScale, clientX = modal.clientWidth / 2, clientY = modal.clientHeight / 2) {
+    const bounds = modal.getBoundingClientRect();
+    zoomAnchor = { x: clientX - bounds.left - bounds.width / 2, y: clientY - bounds.top - bounds.height / 2 };
+    const clampedTarget = Math.min(2.5, Math.max(1, nextScale));
+    boxTargetScale = clampedTarget;
+    if (boxZoomFrame) return;
+
+    function animateZoom() {
+      const distance = boxTargetScale - boxScale;
+      if (Math.abs(distance) < .001) {
+        applyBoxZoom(boxTargetScale);
+        boxZoomFrame = 0;
+        return;
+      }
+      const nextFrameScale = boxScale + distance * .34;
+      applyBoxZoom(nextFrameScale);
+      boxZoomFrame = requestAnimationFrame(animateZoom);
+    }
+    boxZoomFrame = requestAnimationFrame(animateZoom);
+  }
+
+  function resetBoxZoom() {
+    boxPanX = 0;
+    boxPanY = 0;
+    requestBoxZoom(1);
+  }
+
+  // Called directly by the same-origin poster iframe so gestures over the
+  // poster resize the complete box rather than the image alone.
+  window.eemlBoxZoom = (kind, value) => {
+    if (kind === 'wheel') {
+      requestBoxZoom(boxTargetScale * Math.exp(-value * .0032));
+    } else if (kind === 'pinch') {
+      requestBoxZoom(boxTargetScale * value);
+    } else if (kind === 'reset') {
+      resetBoxZoom();
+    }
+  };
+
+  function openEemlPoster(event) {
+    event.preventDefault();
+    if (!iframe.hasAttribute('src')) iframe.src = iframe.dataset.src;
+    modal.hidden = false;
+    document.body.classList.add('eeml-poster-open');
+    paper.removeAttribute('style');
+    note.removeAttribute('style');
+    boxMetrics = null;
+    boxScale = 1;
+    boxTargetScale = 1;
+    boxPanX = 0;
+    boxPanY = 0;
+    if (boxZoomFrame) cancelAnimationFrame(boxZoomFrame);
+    boxZoomFrame = 0;
+    captureBoxMetrics();
+    // Fit all three faces using the actual poster aspect ratio and padding.
+    const fit = Math.min(1, (modal.clientWidth - 32) / (boxMetrics.width + boxMetrics.depth), (modal.clientHeight - 32) / (boxMetrics.height + boxMetrics.depth));
+    for (const key of Object.keys(boxMetrics)) boxMetrics[key] *= fit;
+    zoomAnchor = null;
+    applyBoxZoom(1);
+  }
+
+  function closeEemlPoster() {
+    modal.hidden = true;
+    document.body.classList.remove('eeml-poster-open');
+    if (boxZoomFrame) cancelAnimationFrame(boxZoomFrame);
+    boxZoomFrame = 0;
+    opener.focus();
+  }
+
+  opener.addEventListener('click', openEemlPoster);
+  modal.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    if (event.ctrlKey) {
+      requestBoxZoom(boxTargetScale * Math.exp(-event.deltaY * .0032), event.clientX, event.clientY);
+    } else {
+      stopZoom();
+      boxPanX -= event.deltaX;
+      boxPanY -= event.deltaY;
+      applyBoxPosition();
+    }
+  }, { passive: false });
+  paper.addEventListener('dblclick', resetBoxZoom);
+
+  function stopZoom() {
+    cancelAnimationFrame(boxZoomFrame);
+    boxZoomFrame = 0;
+    boxTargetScale = boxScale;
+    zoomAnchor = null;
+  }
+
+  let previousTouch = null;
+  let suppressClickUntil = 0;
+  function touchDistance(first, second) {
+    return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+  }
+  function touchState(touches) {
+    if (!touches.length) return null;
+    const first = touches[0], second = touches[1] || first;
+    return { x: (first.clientX + second.clientX) / 2, y: (first.clientY + second.clientY) / 2,
+      distance: touches.length > 1 ? touchDistance(first, second) : 0, count: touches.length };
+  }
+  modal.addEventListener('touchstart', (event) => {
+    stopZoom();
+    previousTouch = touchState(event.touches);
+  }, { passive: false });
+  modal.addEventListener('touchmove', (event) => {
+    event.preventDefault();
+    const next = touchState(event.touches);
+    if (previousTouch && next && previousTouch.count === next.count) {
+      suppressClickUntil = Date.now() + 500;
+      const bounds = modal.getBoundingClientRect();
+      zoomAnchor = { x: previousTouch.x - bounds.left - bounds.width / 2, y: previousTouch.y - bounds.top - bounds.height / 2 };
+      if (next.distance && previousTouch.distance) applyBoxZoom(boxScale * next.distance / previousTouch.distance);
+      boxPanX += next.x - previousTouch.x;
+      boxPanY += next.y - previousTouch.y;
+      applyBoxPosition();
+      boxTargetScale = boxScale;
+    }
+    previousTouch = next;
+  }, { passive: false });
+  modal.addEventListener('touchend', (event) => {
+    previousTouch = touchState(event.touches);
+  });
+  modal.addEventListener('touchcancel', () => { previousTouch = null; });
+  modal.addEventListener('click', (event) => {
+    if (Date.now() < suppressClickUntil) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  }, true);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeEemlPoster();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modal.hidden) closeEemlPoster();
+  });
+})();
 </script>
 </body>
 </html>
