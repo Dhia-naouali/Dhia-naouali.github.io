@@ -261,6 +261,20 @@ hr{
 .blog-entry{ width:100%; }
 .blog-entry > div{ overflow-wrap:anywhere; }
 
+/* News entries keep wrapped text indented after their date. */
+.news-list{ width:100%; }
+.news-item{
+  display:grid;
+  grid-template-columns:max-content minmax(0, 1fr);
+  column-gap:6px;
+  align-items:start;
+  padding:2px 2px;
+  margin-bottom:4px;
+}
+.news-item.news-item-spaced{ margin-bottom:10px; }
+.news-date{ flex-shrink:0; white-space:nowrap; }
+.news-item > span{ min-width:0; overflow-wrap:anywhere; }
+
 #embed {
   width: 100%;
   height: 100%;
@@ -517,19 +531,19 @@ body.eeml-poster-open{ overflow: hidden; }
   <div class="blog-middle">
 
 <h1 style="color: #111418; font-weight: 700; line-height: 1.2; font-size: 36px; font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; margin: 0 0 10px 0;">News</h1>
-<div style="font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; font-size: 14px; letter-spacing: 0.055em; line-height: 1.6; width: 100%; margin-bottom: 32px;">
-  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Sep-26.</strong> Serving as a reviewer for a <strong>NeurIPS'26</strong> workshop.</div>
+<div class="news-list" style="font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; font-size: 14px; letter-spacing: 0.055em; line-height: 1.6; margin-bottom: 32px;">
+  <div class="news-item"><strong class="news-date">Sep-26.</strong><span>Serving as a reviewer for a <strong>NeurIPS'26</strong> workshop.</span></div>
 
-  <div style="padding: 2px 2px; margin-bottom: 10px; display:flex; align-items:flex-start; gap:6px;">
-  <strong style="flex-shrink:0;">Aug-26.</strong>
+  <div class="news-item news-item-spaced">
+  <strong class="news-date">Aug-26.</strong>
   <span>"VLCP: Vision Language Control Policy Closed-Loop Code Replanning for Robot Manipulation" <a href="https://arxiv.org/abs/2608.16978" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">[arXiv]</a> <br><span style="opacity: 0.7;"> &nbsp;<u style="text-underline-offset: 4px;">D. Naouali</u>, M. Wu, C. Wong, A. Puthran, O. G. Younis</span>          , accepted @ EMR Workshop, <strong>ECCV'26</strong>.</span>
 </div>
 
-  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Jul-26.</strong> Presented "Perceptually Controversial Latents" as a poster at <strong>EEML'26</strong> summer school.
-    <a class="eeml-poster-link" href="assets/eeml-poster/index.html" data-eeml-poster-open>[poster]</a>
+  <div class="news-item"><strong class="news-date">Jul-26.</strong><span>Presented "Perceptually Controversial Latents" as a poster at <strong>EEML'26</strong> summer school.
+    <a class="eeml-poster-link" href="assets/eeml-poster/index.html" data-eeml-poster-open>[poster]</a></span>
   </div>
-  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Mar-26.</strong> Ranked 4th in the <strong>ICLR'26</strong> Re-Align Challenge; solution presented as a poster. <a target="_blank" href="https://representational-alignment.github.io/2026/challenge/blog/sub-04/" style="text-decoration:underline;">[blog]</a></div>
-  <div style="padding: 2px 2px; margin-bottom: 4px;"><strong>Nov-25.</strong> Ranked 13th (top 1.1%) in the <strong>NeurIPS'25</strong> EEG Foundations Challenge  as team <u style="text-underline-offset: 4px;">return_sota</u>.</div>
+  <div class="news-item"><strong class="news-date">Mar-26.</strong><span>Ranked 4th in the <strong>ICLR'26</strong> Re-Align Challenge; solution presented (virtually) as a poster. <a target="_blank" href="https://representational-alignment.github.io/2026/challenge/blog/sub-04/" style="text-decoration:underline;">[blog]</a></span></div>
+  <div class="news-item"><strong class="news-date">Nov-25.</strong><span>Ranked 13th (top 1.1%) in the <strong>NeurIPS'25</strong> EEG Foundations Challenge  as team <u style="text-underline-offset: 4px;">return_sota</u>.</span></div>
 </div>
 <div class="eeml-poster-modal" id="eeml-poster-modal" role="dialog" aria-modal="true" aria-label="EEML poster 65" hidden>
   <div class="eeml-paper">
